@@ -271,6 +271,11 @@ export function registerImpersonateRoutes(app: BaseApp, router: Router): void {
 
   authRouter.post('/impersonate/:recordId', async (req: Request, res: Response) => {
     try {
+      // Only superusers can impersonate
+      if (!req.authContext?.isAdmin) {
+        return res.status(403).json({ code: 403, message: 'Only superusers can impersonate.' })
+      }
+
       const recordId = req.params.recordId
       const collectionIdOrName = req.params.collectionIdOrName
 

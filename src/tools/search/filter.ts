@@ -256,6 +256,18 @@ export function buildSQL(ast: FilterAST, paramOffset = 0): { where: string; para
           }
           params.push(value)
           return `${field} IN (?)`
+        case '?=':
+          params.push(value)
+          return `EXISTS (SELECT 1 FROM json_each(${field}) WHERE json_each.value = ?)`
+        case '?:':
+          params.push(`%${value}%`)
+          return `EXISTS (SELECT 1 FROM json_each(${field}) WHERE CAST(json_each.value AS TEXT) LIKE ?)`
+        case 'not':
+          // Unary NOT - wrap the next expression in a NOT
+          // This requires the parser to support unary operators properly
+          // For now, treat as unsupported in SQL builder
+          params.push(value)
+          return `NOT (${field} = ?)`
         default:
           params.push(value)
           return `${field} = ?`
@@ -338,6 +350,36 @@ export function evaluateFilterAST(ast: FilterAST, getValue: (field: string) => a
           return compareValue.includes(fieldValue)
         }
         return fieldValue == compareValue
+      case '?=':
+        if (Array.isArray(fieldValue)) {
+          return fieldValue.includes(compareValue)
+        }
+        if (typeof fieldValue === 'string') {
+          try {
+            const parsed = JSON.parse(fieldValue)
+            if (Array.isArray(parsed)) {
+              return parsed.includes(compareValue)
+            }
+          } catch {
+            // ignore
+          }
+        }
+        return fieldValue == compareValue
+      case '?:':
+        if (Array.isArray(fieldValue)) {
+          return fieldValue.some(v => String(v).toLowerCase().includes(String(compareValue).toLowerCase()))
+        }
+        if (typeof fieldValue === 'string') {
+          try {
+            const parsed = JSON.parse(fieldValue)
+            if (Array.isArray(parsed)) {
+              return parsed.some((v: any) => String(v).toLowerCase().includes(String(compareValue).toLowerCase()))
+            }
+          } catch {
+            // ignore
+          }
+        }
+        return String(fieldValue).toLowerCase().includes(String(compareValue).toLowerCase())
       default:
         return false
     }

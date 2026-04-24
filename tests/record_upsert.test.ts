@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { BaseApp } from '../src/core/base'
 import { Collection } from '../src/core/collection'
+import { RecordModel as PBRecord } from '../src/core/record'
 import { RecordUpsertForm, validateAndCreateRecord, validateAndUpdateRecord } from '../src/core/record_upsert'
 
 describe('RecordUpsertForm', () => {
@@ -146,5 +147,67 @@ describe('validateAndCreateRecord', () => {
     const { record, errors } = await validateAndCreateRecord(app, collection, {})
     expect(errors).toHaveLength(1)
     expect(record).toBeNull()
+  })
+})
+
+describe('RecordUpsertForm modifiers', () => {
+  let app: BaseApp
+  let collection: Collection
+
+  beforeEach(async () => {
+    const dataDir = `./test_data_modifiers_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    app = new BaseApp({ isDev: true, dataDir })
+    await app.bootstrap()
+
+    collection = new Collection({
+      name: 'modifier_test',
+      type: 'base',
+      system: false,
+      listRule: null,
+      viewRule: null,
+      createRule: null,
+      updateRule: null,
+      deleteRule: null,
+      fields: [
+        { id: 'fld1', name: 'title', type: 'text', system: false, required: false, presentable: true, hidden: false },
+        { id: 'fld2', name: 'tags', type: 'select', system: false, required: false, presentable: true, hidden: false, values: ['a', 'b', 'c', 'd'] },
+      ],
+      indexes: [],
+    })
+
+    await app.save(collection)
+  })
+
+  it('should append to array with +field modifier', () => {
+    const existingRecord = new PBRecord(collection.id, collection.name, { id: 'r1', collectionId: collection.id, collectionName: collection.name, title: 'Test', tags: ['a', 'b'] })
+    const form = new RecordUpsertForm(app, {
+      data: { '+tags': ['c', 'd'] },
+      collection,
+      record: existingRecord,
+    })
+    const record = form.buildRecord()
+    expect(record.get('tags')).toEqual(['a', 'b', 'c', 'd'])
+  })
+
+  it('should remove from array with field- modifier', () => {
+    const existingRecord = new PBRecord(collection.id, collection.name, { id: 'r1', collectionId: collection.id, collectionName: collection.name, title: 'Test', tags: ['a', 'b', 'c'] })
+    const form = new RecordUpsertForm(app, {
+      data: { 'tags-': ['b'] },
+      collection,
+      record: existingRecord,
+    })
+    const record = form.buildRecord()
+    expect(record.get('tags')).toEqual(['a', 'c'])
+  })
+
+  it('should append single value with +field modifier', () => {
+    const existingRecord = new PBRecord(collection.id, collection.name, { id: 'r1', collectionId: collection.id, collectionName: collection.name, title: 'Test', tags: ['a'] })
+    const form = new RecordUpsertForm(app, {
+      data: { '+tags': 'b' },
+      collection,
+      record: existingRecord,
+    })
+    const record = form.buildRecord()
+    expect(record.get('tags')).toEqual(['a', 'b'])
   })
 })

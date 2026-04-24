@@ -177,6 +177,14 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'Validation failed.', data: errors })
       }
 
+      // Enforce createRule
+      if (collection.createRule !== null) {
+        const accessible = await canAccessRecord(app, record, collection, collection.createRule, requestInfo)
+        if (!accessible) {
+          return res.status(403).json({ code: 403, message: 'Access denied.' })
+        }
+      }
+
       await app.save(record)
 
       const enriched = await enrichRecord(app, collection, record, { requestInfo })

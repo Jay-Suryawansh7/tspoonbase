@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express'
 import { BaseApp } from '../core/base'
 import { RecordModel as PBRecord } from '../core/record'
+import { canAccessRecord } from './record_helpers'
+import { RequestInfo } from '../core/record_field_resolver'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
@@ -85,6 +87,27 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
       const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(recordId) as any
       if (!row) {
         return res.status(404).json({ code: 404, message: 'Record not found.' })
+      }
+
+      const record = new PBRecord(collection.id, collection.name, row)
+
+      // Check viewRule for file access
+      const requestInfo: RequestInfo = {
+        auth: req.authContext?.record ?? null,
+        isAdmin: req.authContext?.isAdmin ?? false,
+        method: req.method,
+        headers: req.headers as Record<string, string>,
+        query: req.query as Record<string, string>,
+        body: req.body,
+        data: req.body,
+        context: 'view',
+      }
+
+      if (collection.viewRule !== null) {
+        const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
+        if (!accessible) {
+          return res.status(404).json({ code: 404, message: 'File not found.' })
+        }
       }
 
       let filePath: string

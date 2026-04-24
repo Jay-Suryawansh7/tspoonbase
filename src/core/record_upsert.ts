@@ -147,9 +147,32 @@ export class RecordUpsertForm {
 
     // Apply new data
     for (const [key, value] of Object.entries(this.data)) {
-      if (!['password', 'passwordConfirm', 'oldPassword', 'newPassword', 'newPasswordConfirm'].includes(key)) {
-        recordData[key] = value
+      if (['password', 'passwordConfirm', 'oldPassword', 'newPassword', 'newPasswordConfirm'].includes(key)) {
+        continue
       }
+
+      // Handle append modifier: +field
+      if (key.startsWith('+')) {
+        const fieldName = key.slice(1)
+        const existing = recordData[fieldName] || []
+        const existingArr = Array.isArray(existing) ? existing : [existing]
+        const newArr = Array.isArray(value) ? value : [value]
+        recordData[fieldName] = [...existingArr, ...newArr]
+        continue
+      }
+
+      // Handle remove modifier: field-
+      if (key.endsWith('-')) {
+        const fieldName = key.slice(0, -1)
+        const existing = recordData[fieldName] || []
+        if (Array.isArray(existing)) {
+          const toRemove = Array.isArray(value) ? value : [value]
+          recordData[fieldName] = existing.filter((v: any) => !toRemove.includes(v))
+        }
+        continue
+      }
+
+      recordData[key] = value
     }
 
     // Handle autodate fields

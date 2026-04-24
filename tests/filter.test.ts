@@ -66,4 +66,53 @@ describe('Filter Parser', () => {
     })
     expect(result).toBe(true)
   })
+
+  it('should parse ?= (any equal) operator', () => {
+    const ast = parseFilter('tags ?= "red"')
+    expect((ast as any).operator).toBe('?=')
+    expect((ast as any).value).toBe('red')
+  })
+
+  it('should evaluate ?= operator on arrays', () => {
+    const ast = parseFilter('tags ?= "red"')
+    const result = evaluateFilterAST(ast, (field) => {
+      if (field === 'tags') return ['red', 'blue']
+      return undefined
+    })
+    expect(result).toBe(true)
+  })
+
+  it('should evaluate ?= operator on JSON string arrays', () => {
+    const ast = parseFilter('tags ?= "red"')
+    const result = evaluateFilterAST(ast, (field) => {
+      if (field === 'tags') return '["red","blue"]'
+      return undefined
+    })
+    expect(result).toBe(true)
+  })
+
+  it('should evaluate ?: (any contains) operator on arrays', () => {
+    const ast = parseFilter('tags ?: "lu"')
+    const result = evaluateFilterAST(ast, (field) => {
+      if (field === 'tags') return ['blue', 'purple']
+      return undefined
+    })
+    expect(result).toBe(true)
+  })
+
+  it('should build SQL for ?= operator', () => {
+    const ast = parseFilter('tags ?= "red"')
+    const { where, params } = buildSQL(ast)
+    expect(where).toContain('json_each')
+    expect(where).toContain('tags')
+    expect(params).toContain('red')
+  })
+
+  it('should build SQL for ?: operator', () => {
+    const ast = parseFilter('tags ?: "lu"')
+    const { where, params } = buildSQL(ast)
+    expect(where).toContain('json_each')
+    expect(where).toContain('LIKE')
+    expect(params).toContain('%lu%')
+  })
 })
