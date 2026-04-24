@@ -142,9 +142,9 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
       return true
     }
 
-    const { findRecordById, findAllRecords, deleteRecordById } = await import('../core/record_query')
-    const { enrichRecord, enrichRecords, canAccessRecord } = await import('./record_helpers')
-    const { RecordModel } = await import('../core/record')
+    const { findRecordById, findAllRecords, deleteRecordById } = await import('../core/record_query.js')
+    const { enrichRecord, enrichRecords, canAccessRecord } = await import('./record_helpers.js')
+    const { RecordModel } = await import('../core/record.js')
 
     const requestInfo: any = {
       auth: req.authContext?.record ?? null,
@@ -203,7 +203,7 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
             perPage: result.perPage,
             totalItems: result.totalItems,
             totalPages: result.totalPages,
-            items: enriched.map(r => r.toJSON()),
+            items: enriched.map((r: any) => r.toJSON()),
           })
         }
         return true

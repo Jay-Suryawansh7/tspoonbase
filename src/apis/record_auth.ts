@@ -236,8 +236,8 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const settings = app.settings()
       if (settings.smtp.host) {
         try {
-          const { Mailer } = await import('../tools/mailer/mailer')
-          const { EmailTemplateEngine, sendOTPEmail } = await import('../tools/mailer/templates')
+          const { Mailer } = await import('../tools/mailer/mailer.js')
+          const { EmailTemplateEngine, sendOTPEmail } = await import('../tools/mailer/templates.js')
           const mailer = Mailer.fromSettings(settings)
           const engine = new EmailTemplateEngine(settings)
           await sendOTPEmail(mailer, engine, email, { otp: otpPassword })

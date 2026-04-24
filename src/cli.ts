@@ -54,7 +54,7 @@ program
   .option('--password <password>', 'superuser password')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (opts) => {
-    const { createSuperuser } = await import('./cmd/superuser')
+    const { createSuperuser } = await import('./cmd/superuser.js')
     await createSuperuser({
       email: opts.email,
       password: opts.password,
@@ -70,7 +70,7 @@ program
   .argument('[password]', 'superuser password')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (email, password, opts) => {
-    const { createSuperuser } = await import('./cmd/superuser')
+    const { createSuperuser } = await import('./cmd/superuser.js')
     await createSuperuser({
       email,
       password,
@@ -87,7 +87,7 @@ migrate
   .description('run pending migrations')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (opts) => {
-    const { TspoonBase } = await import('./tspoonbase')
+    const { TspoonBase } = await import('./tspoonbase.js')
     const app = new TspoonBase({
       defaultDev: false,
       defaultDataDir: opts.dir,
@@ -104,7 +104,7 @@ migrate
   .argument('[count]', 'number of migrations to rollback', '1')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (count, opts) => {
-    const { TspoonBase } = await import('./tspoonbase')
+    const { TspoonBase } = await import('./tspoonbase.js')
     const app = new TspoonBase({
       defaultDev: false,
       defaultDataDir: opts.dir,
@@ -120,7 +120,7 @@ migrate
   .description('show migration status')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (opts) => {
-    const { TspoonBase } = await import('./tspoonbase')
+    const { TspoonBase } = await import('./tspoonbase.js')
     const app = new TspoonBase({
       defaultDev: false,
       defaultDataDir: opts.dir,
