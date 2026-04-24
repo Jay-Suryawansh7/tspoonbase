@@ -1,0 +1,1 @@
+{"nodes": [{"id": "ui_embed_no_ui_go", "label": "embed_no_ui.go", "file_type": "code", "source_file": "ui/embed_no_ui.go", "source_location": "L1"}], "edges": [{"source": "ui_embed_no_ui_go", "target": "fs", "relation": "imports_from", "confidence": "EXTRACTED", "source_file": "ui/embed_no_ui.go", "source_location": "L5", "weight": 1.0}], "raw_calls": []}

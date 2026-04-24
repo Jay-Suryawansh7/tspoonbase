@@ -1,0 +1,198 @@
+import { Router, Request, Response } from 'express'
+import { BaseApp } from '../core/base'
+import { RecordModel as PBRecord } from '../core/record'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+import { createHash } from 'crypto'
+
+const upload = multer({ dest: 'uploads/' })
+
+export function registerFileRoutes(app: BaseApp, router: Router): void {
+  // File upload endpoint
+  router.post('/api/collections/:collectionIdOrName/records/:recordId/files', upload.array('files', 10), async (req: Request, res: Response) => {
+    try {
+      const { collectionIdOrName, recordId } = req.params
+      const collection = await app.findCollectionByNameOrId(collectionIdOrName)
+      if (!collection) {
+        return res.status(404).json({ code: 404, message: 'Collection not found.' })
+      }
+
+      const db = app.db().getDataDB()
+      const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(recordId) as any
+      if (!row) {
+        return res.status(404).json({ code: 404, message: 'Record not found.' })
+      }
+
+      const files = req.files as Express.Multer.File[]
+      if (!files || files.length === 0) {
+        return res.status(400).json({ code: 400, message: 'No files uploaded.' })
+      }
+
+      const storageBase = path.join(app.dataDir, 'storage', collection.name, recordId)
+      fs.mkdirSync(storageBase, { recursive: true })
+
+      const savedFiles: string[] = []
+      const thumbsGenerated: string[] = []
+
+      for (const file of files) {
+        const ext = path.extname(file.originalname)
+        const baseName = path.basename(file.originalname, ext)
+        const safeName = `${baseName}${ext}`.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const destPath = path.join(storageBase, safeName)
+
+        fs.copyFileSync(file.path, destPath)
+        fs.unlinkSync(file.path)
+        savedFiles.push(safeName)
+
+        // Generate thumbnails for image files
+        if (isImageFile(safeName)) {
+          const thumbs = await generateThumbnails(destPath, storageBase, baseName, ext, app)
+          thumbsGenerated.push(...thumbs)
+        }
+      }
+
+      // Update record with file references
+      const fieldName = req.query.field as string || 'files'
+      const record = new PBRecord(collection.id, collection.name, row)
+      const existingFiles = record.get(fieldName) || []
+      const allFiles = Array.isArray(existingFiles) ? [...existingFiles, ...savedFiles] : savedFiles
+      record.set(fieldName, allFiles)
+      await app.save(record)
+
+      res.status(200).json({
+        files: savedFiles,
+        thumbs: thumbsGenerated,
+      })
+    } catch (err: any) {
+      res.status(500).json({ code: 500, message: err.message })
+    }
+  })
+
+  // File download endpoint
+  router.get('/api/files/:collectionIdOrName/:recordId/:filename', async (req: Request, res: Response) => {
+    try {
+      const { collectionIdOrName, recordId, filename } = req.params
+      const thumb = req.query.thumb as string
+      const download = req.query.download === '1'
+
+      const collection = await app.findCollectionByNameOrId(collectionIdOrName)
+      if (!collection) {
+        return res.status(404).json({ code: 404, message: 'Collection not found.' })
+      }
+
+      const db = app.db().getDataDB()
+      const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(recordId) as any
+      if (!row) {
+        return res.status(404).json({ code: 404, message: 'Record not found.' })
+      }
+
+      let filePath: string
+      if (thumb) {
+        filePath = path.join(app.dataDir, 'storage', collection.name, recordId, `${path.basename(filename, path.extname(filename))}_${thumb}${path.extname(filename)}`)
+      } else {
+        filePath = path.join(app.dataDir, 'storage', collection.name, recordId, filename)
+      }
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ code: 404, message: 'File not found.' })
+      }
+
+      if (download) {
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      }
+
+      res.sendFile(path.resolve(filePath))
+    } catch (err: any) {
+      res.status(500).json({ code: 500, message: err.message })
+    }
+  })
+
+  // File delete endpoint
+  router.delete('/api/collections/:collectionIdOrName/records/:recordId/files/:filename', async (req: Request, res: Response) => {
+    try {
+      const { collectionIdOrName, recordId, filename } = req.params
+      const collection = await app.findCollectionByNameOrId(collectionIdOrName)
+      if (!collection) {
+        return res.status(404).json({ code: 404, message: 'Collection not found.' })
+      }
+
+      const db = app.db().getDataDB()
+      const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(recordId) as any
+      if (!row) {
+        return res.status(404).json({ code: 404, message: 'Record not found.' })
+      }
+
+      const storageBase = path.join(app.dataDir, 'storage', collection.name, recordId)
+      const filePath = path.join(storageBase, filename)
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+      }
+
+      // Delete associated thumbnails
+      const baseName = path.basename(filename, path.extname(filename))
+      const ext = path.extname(filename)
+      const thumbs = fs.readdirSync(storageBase).filter(f => f.startsWith(`${baseName}_thumb`))
+      for (const thumb of thumbs) {
+        fs.unlinkSync(path.join(storageBase, thumb))
+      }
+
+      // Update record
+      const record = new PBRecord(collection.id, collection.name, row)
+      const fieldName = req.query.field as string || 'files'
+      const existingFiles = record.get(fieldName) || []
+      if (Array.isArray(existingFiles)) {
+        record.set(fieldName, existingFiles.filter((f: string) => f !== filename))
+        await app.save(record)
+      }
+
+      res.status(204).send()
+    } catch (err: any) {
+      res.status(500).json({ code: 500, message: err.message })
+    }
+  })
+}
+
+function isImageFile(filename: string): boolean {
+  const ext = path.extname(filename).toLowerCase()
+  return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'].includes(ext)
+}
+
+async function generateThumbnails(
+  sourcePath: string,
+  storageBase: string,
+  baseName: string,
+  ext: string,
+  app: BaseApp
+): Promise<string[]> {
+  const thumbs: string[] = []
+  const sizes = [
+    { suffix: 'thumb_100x100', width: 100, height: 100 },
+    { suffix: 'thumb_300x300', width: 300, height: 300 },
+    { suffix: 'thumb_500x500', width: 500, height: 500 },
+  ]
+
+  try {
+    // Try to use sharp if available, otherwise skip thumbnail generation
+    let sharp: any
+    try {
+      sharp = require('sharp')
+    } catch {
+      app.logger().warn('sharp not installed, skipping thumbnail generation')
+      return thumbs
+    }
+
+    for (const size of sizes) {
+      const thumbPath = path.join(storageBase, `${baseName}_${size.suffix}${ext}`)
+      await sharp(sourcePath)
+        .resize(size.width, size.height, { fit: 'cover', withoutEnlargement: true })
+        .toFile(thumbPath)
+      thumbs.push(`${baseName}_${size.suffix}${ext}`)
+    }
+  } catch (err: any) {
+    app.logger().error('Thumbnail generation failed', err.message)
+  }
+
+  return thumbs
+}
