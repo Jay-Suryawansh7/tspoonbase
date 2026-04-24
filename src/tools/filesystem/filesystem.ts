@@ -1,5 +1,6 @@
 import { LocalBlobDriver } from './blob/driver'
 import { BlobDriver } from './blob/driver'
+import { S3BlobDriver } from './s3_driver'
 import { S3Config } from '../../core/settings'
 import fs from 'fs'
 import path from 'path'
@@ -51,38 +52,5 @@ export class Filesystem {
   }
 
   close(): void {
-  }
-}
-
-class S3BlobDriver extends BlobDriver {
-  private config: S3Config
-
-  constructor(config: S3Config) {
-    super()
-    this.config = config
-  }
-
-  async list(prefix?: string): Promise<any[]> {
-    throw new Error('S3 driver not fully implemented')
-  }
-
-  async get(key: string): Promise<any> {
-    throw new Error('S3 driver not fully implemented')
-  }
-
-  async put(key: string, content: any, size?: number): Promise<void> {
-    throw new Error('S3 driver not fully implemented')
-  }
-
-  async delete(key: string): Promise<void> {
-    throw new Error('S3 driver not fully implemented')
-  }
-
-  async exists(key: string): Promise<boolean> {
-    throw new Error('S3 driver not fully implemented')
-  }
-
-  async url(key: string): Promise<string> {
-    return `https://${this.config.bucket}.s3.${this.config.region}.amazonaws.com/${this.config.prefix || ''}${key}`
   }
 }

@@ -13,6 +13,10 @@ export async function syncRecordTableSchema(
   app: BaseApp,
   collection: Collection
 ): Promise<SchemaSyncResult> {
+  if (collection.isView()) {
+    return syncViewCollection(app, collection)
+  }
+
   if (!collection.isBase() && !collection.isAuth()) {
     return { changed: false, addedColumns: [], removedColumns: [], modifiedColumns: [] }
   }
@@ -63,6 +67,11 @@ export async function syncRecordTableSchema(
 }
 
 export async function createRecordTable(app: BaseApp, collection: Collection): Promise<void> {
+  if (collection.isView()) {
+    await syncViewCollection(app, collection)
+    return
+  }
+
   if (!collection.isBase() && !collection.isAuth()) return
 
   const db = app.db().getDataDB()
@@ -74,6 +83,29 @@ export async function createRecordTable(app: BaseApp, collection: Collection): P
   db.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (${columnDefs.join(', ')})`)
 
   await syncIndexes(app, collection)
+}
+
+async function syncViewCollection(app: BaseApp, collection: Collection): Promise<SchemaSyncResult> {
+  const db = app.db().getDataDB()
+  const viewName = `_r_${collection.id}`
+
+  // Drop existing view if query changed
+  try {
+    db.exec(`DROP VIEW IF EXISTS ${viewName}`)
+  } catch {
+    // view might not exist
+  }
+
+  const query = collection.viewOptions?.query
+  if (query) {
+    try {
+      db.exec(`CREATE VIEW ${viewName} AS ${query}`)
+    } catch (err: any) {
+      app.logger().error(`Failed to create view ${viewName}`, err.message)
+    }
+  }
+
+  return { changed: false, addedColumns: [], removedColumns: [], modifiedColumns: [] }
 }
 
 function getExistingColumns(db: any, tableName: string): Array<{ name: string; type: string }> {

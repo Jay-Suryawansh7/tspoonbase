@@ -3,6 +3,7 @@ import { serve } from './apis/serve'
 import { Hook } from './tools/hook/hook'
 import { BootstrapEvent } from './core/events'
 import { hasSuperuser } from './cmd/superuser'
+import { JSVM } from './tools/jsvm/jsvm'
 import path from 'path'
 import fs from 'fs'
 
@@ -42,6 +43,7 @@ export class TspoonBase extends BaseApp {
     await this.bootstrap()
     await this.runAllMigrations()
     await this.runJSMigrations()
+    await this.loadJSHooks()
 
     const hasAdmin = hasSuperuser(this)
     const installerUrl = `http://localhost:${port}/_/#/install`
@@ -104,6 +106,11 @@ Server started at http://localhost:${port}
         console.error(`JS migration failed: ${migrationId}`, err.message)
       }
     }
+  }
+
+  private async loadJSHooks(): Promise<void> {
+    const jsvm = new JSVM(this)
+    await jsvm.loadHooks()
   }
 }
 

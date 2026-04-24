@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc && npm run build:ui",
-    "build:ui": "cd ui && npm run build",
+    "build:ui": "cd admin && npm install && npm run build",
     "dev": "tsx watch src/cli.ts serve --dev",
     "test": "vitest run",
     "test:watch": "vitest",

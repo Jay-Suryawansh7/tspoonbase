@@ -75,4 +75,31 @@ export class MigrationRunner {
       }
     }
   }
+
+  status(): { id: string; applied: boolean; appliedAt?: string }[] {
+    if (!this.app.isBootstrapped()) {
+      throw new Error('App must be bootstrapped before checking migration status')
+    }
+
+    const db = this.app.db().getDataDB()
+    const appliedRows = db.prepare('SELECT id, applied FROM _applied_migrations').all() as Array<{ id: string; applied: string }>
+    const appliedMap = new Map(appliedRows.map(r => [r.id, r.applied]))
+
+    return this.migrations.map(m => ({
+      id: m.id,
+      applied: appliedMap.has(m.id),
+      appliedAt: appliedMap.get(m.id),
+    }))
+  }
+
+  list(): Migration[] {
+    return [...this.migrations]
+  }
+
+  isApplied(id: string): boolean {
+    if (!this.app.isBootstrapped()) return false
+    const db = this.app.db().getDataDB()
+    const row = db.prepare('SELECT id FROM _applied_migrations WHERE id = ?').get(id) as { id: string } | undefined
+    return !!row
+  }
 }

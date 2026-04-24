@@ -56,6 +56,7 @@ export class GenericOAuth2Provider implements OAuth2Provider {
   pkce: boolean
   clientId: string
   clientSecret: string
+  redirectURL: string
 
   constructor(config: {
     name: string
@@ -67,6 +68,7 @@ export class GenericOAuth2Provider implements OAuth2Provider {
     clientId: string
     clientSecret: string
     pkce?: boolean
+    redirectURL?: string
   }) {
     this.name = config.name
     this.displayName = config.displayName
@@ -77,6 +79,7 @@ export class GenericOAuth2Provider implements OAuth2Provider {
     this.clientId = config.clientId
     this.clientSecret = config.clientSecret
     this.pkce = config.pkce ?? false
+    this.redirectURL = config.redirectURL ?? ''
   }
 
   getAuthURL(state: string, codeChallenge?: string, redirectURL?: string): string {
@@ -85,8 +88,9 @@ export class GenericOAuth2Provider implements OAuth2Provider {
     url.searchParams.set('response_type', 'code')
     url.searchParams.set('scope', this.scopes.join(' '))
     url.searchParams.set('state', state)
-    if (redirectURL) {
-      url.searchParams.set('redirect_uri', redirectURL)
+    const finalRedirectURL = redirectURL || this.redirectURL
+    if (finalRedirectURL) {
+      url.searchParams.set('redirect_uri', finalRedirectURL)
     }
     if (this.pkce && codeChallenge) {
       url.searchParams.set('code_challenge', codeChallenge)
@@ -101,8 +105,9 @@ export class GenericOAuth2Provider implements OAuth2Provider {
     params.set('client_id', this.clientId)
     params.set('client_secret', this.clientSecret)
     params.set('code', code)
-    if (redirectURL) {
-      params.set('redirect_uri', redirectURL)
+    const finalRedirectURL = redirectURL || this.redirectURL
+    if (finalRedirectURL) {
+      params.set('redirect_uri', finalRedirectURL)
     }
     if (this.pkce && codeVerifier) {
       params.set('code_verifier', codeVerifier)
