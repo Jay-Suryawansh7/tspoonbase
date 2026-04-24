@@ -1,1 +1,0 @@
-{"nodes": [{"id": "ui_vite_config_js", "label": "vite.config.js", "file_type": "code", "source_file": "ui/vite.config.js", "source_location": "L1"}], "edges": [{"source": "ui_vite_config_js", "target": "vite", "relation": "imports_from", "confidence": "EXTRACTED", "source_file": "ui/vite.config.js", "source_location": "L1", "weight": 1.0}], "raw_calls": []}

@@ -37,7 +37,7 @@ export class TspoonBase extends BaseApp {
     }
     super(baseConfig)
     this.hideStartBanner = config.hideStartBanner ?? false
-    this.version = '0.2.3'
+    this.version = '0.2.4'
     this._migrationRunner = undefined
   }
 
