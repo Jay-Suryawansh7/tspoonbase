@@ -1,9 +1,9 @@
 import { BaseApp, BaseAppConfig } from './core/base'
 import { serve } from './apis/serve'
-import { Hook } from './tools/hook/hook'
 import { BootstrapEvent } from './core/events'
 import { hasSuperuser } from './cmd/superuser'
 import { JSVM } from './tools/jsvm/jsvm'
+import { MigrationRunner } from './core/migration'
 import path from 'path'
 import fs from 'fs'
 
@@ -22,6 +22,7 @@ export interface TspoonBaseConfig {
 export class TspoonBase extends BaseApp {
   hideStartBanner: boolean
   version: string
+  private _migrationRunner?: MigrationRunner
 
   constructor(config: TspoonBaseConfig = {}) {
     const baseConfig: BaseAppConfig = {
@@ -36,13 +37,13 @@ export class TspoonBase extends BaseApp {
     }
     super(baseConfig)
     this.hideStartBanner = config.hideStartBanner ?? false
-    this.version = '0.1.0'
+    this.version = '0.2.2'
+    this._migrationRunner = undefined
   }
 
   async start(port = 8090): Promise<void> {
     await this.bootstrap()
-    await this.runAllMigrations()
-    await this.runJSMigrations()
+    await this.migrate()
     await this.loadJSHooks()
 
     const hasAdmin = hasSuperuser(this)
@@ -71,7 +72,31 @@ Server started at http://localhost:${port}
     await serve(this, port)
   }
 
-  private async runJSMigrations(): Promise<void> {
+  async migrate(): Promise<void> {
+    if (!this._migrationRunner) {
+      this._migrationRunner = new MigrationRunner(this)
+      this._loadJSMigrations()
+    }
+    await this._migrationRunner.run()
+  }
+
+  async migrateDown(count = 1): Promise<void> {
+    if (!this._migrationRunner) {
+      this._migrationRunner = new MigrationRunner(this)
+      this._loadJSMigrations()
+    }
+    await this._migrationRunner.rollback(count)
+  }
+
+  migrationStatus(): { id: string; applied: boolean; appliedAt?: string }[] {
+    if (!this._migrationRunner) {
+      this._migrationRunner = new MigrationRunner(this)
+      this._loadJSMigrations()
+    }
+    return this._migrationRunner.status()
+  }
+
+  private _loadJSMigrations(): void {
     const migrationsDir = path.join(process.cwd(), 'pb_migrations')
     if (!fs.existsSync(migrationsDir)) return
 
@@ -79,31 +104,22 @@ Server started at http://localhost:${port}
       .filter(f => f.endsWith('.js'))
       .sort()
 
-    const db = this.db().getDataDB()
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS _migrations (
-        id TEXT PRIMARY KEY,
-        applied TEXT NOT NULL
-      )
-    `)
-
     for (const file of files) {
       const migrationId = file.replace(/\.js$/, '')
-      const applied = db.prepare('SELECT id FROM _migrations WHERE id = ?').get(migrationId)
-      if (applied) continue
+      const fullPath = path.join(migrationsDir, file)
 
       try {
-        const fullPath = path.join(migrationsDir, file)
-        const migrationModule = require(fullPath)
-        if (typeof migrationModule.up === 'function') {
-          await migrationModule.up(this)
-        }
+        // Clear require cache to allow reloading
+        delete require.cache[require.resolve(fullPath)]
+        const mod = require(fullPath)
 
-        const now = new Date().toISOString()
-        db.prepare('INSERT INTO _migrations (id, applied) VALUES (?, ?)').run(migrationId, now)
-        console.log(`JS migration applied: ${migrationId}`)
+        this._migrationRunner!.add({
+          id: migrationId,
+          up: mod.up,
+          down: mod.down,
+        })
       } catch (err: any) {
-        console.error(`JS migration failed: ${migrationId}`, err.message)
+        console.error(`Failed to load migration ${file}:`, err.message)
       }
     }
   }

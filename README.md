@@ -1,15 +1,23 @@
 # TspoonBase
 
-[![npm version](https://img.shields.io/npm/v/tspoonbase.svg)](https://www.npmjs.com/package/tspoonbase)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <img src="https://img.shields.io/npm/v/tspoonbase.svg?style=flat-square&color=blue" alt="npm version">
+  <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg?style=flat-square" alt="Node.js">
+  <img src="https://img.shields.io/npm/dm/tspoonbase.svg?style=flat-square&color=orange" alt="Downloads">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License">
+</p>
 
-A **TypeScript backend-as-a-service** in a single package. Built with SQLite, Express, and WebSocket — featuring authentication, realtime subscriptions, file storage, AI-powered development tools, vector search, and a React Admin UI. Inspired by PocketBase.
+<p align="center">
+  <b>A TypeScript Backend-as-a-Service in a single package.</b><br>
+  SQLite, Express, WebSocket — Auth, Realtime, File Storage, AI Tools, Vector Search, React Admin UI.
+</p>
 
-```bash
-npm install -g tspoonbase
-tspoonbase serve --dev --port 8090
-```
+<p align="center">
+  <a href="https://www.npmjs.com/package/tspoonbase">npm</a> •
+  <a href="https://github.com/Jay-Suryawansh7/tspoonbase">GitHub</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#api-reference">API Reference</a>
+</p>
 
 ---
 
@@ -17,7 +25,7 @@ tspoonbase serve --dev --port 8090
 
 - [Quick Start](#quick-start)
 - [Installation](#installation)
-- [CLI](#cli)
+- [CLI Commands](#cli-commands)
 - [Features](#features)
 - [Admin UI](#admin-ui)
 - [Authentication](#authentication)
@@ -26,17 +34,19 @@ tspoonbase serve --dev --port 8090
 - [Vector Search](#vector-search)
 - [File Storage](#file-storage)
 - [Realtime](#realtime)
-- [API Reference](#api-reference)
+- [Migrations](#migrations)
 - [JavaScript Hooks](#javascript-hooks)
+- [API Reference](#api-reference)
 - [Configuration](#configuration)
 - [Architecture](#architecture)
+- [Development](#development)
 - [License](#license)
 
 ---
 
 ## Quick Start
 
-### Global CLI (recommended)
+### Global CLI (Recommended)
 
 ```bash
 # Install globally
@@ -87,7 +97,7 @@ CMD ["tspoonbase", "serve", "--port", "8090"]
 
 ---
 
-## CLI
+## CLI Commands
 
 ```bash
 # Start the server
@@ -98,6 +108,15 @@ tspoonbase serve [options]
 
 # Create superuser
 tspoonbase superuser-create <email> <password>
+
+# Run pending migrations
+tspoonbase migrate up
+
+# Rollback migrations
+tspoonbase migrate down [count]
+
+# Check migration status
+tspoonbase migrate status
 ```
 
 ---
@@ -110,6 +129,7 @@ tspoonbase superuser-create <email> <password>
 - **3 collection types:** base, auth, view
 - Schema synchronization — collections automatically create/alter tables
 - Full **filter, sort, pagination** support
+- **Back-relations** — auto-resolve `collection_via_fieldName` lookups
 
 ### Authentication
 - **Email/Password** with bcrypt hashing
@@ -119,14 +139,17 @@ tspoonbase superuser-create <email> <password>
 - **JWT tokens** with refresh
 - Password reset, email verification, email change flows
 - User impersonation (superuser only)
+- Admin authentication with refresh and password reset
 
 ### Security
 - Collection-level **API rules** (`listRule`, `viewRule`, `createRule`, `updateRule`, `deleteRule`)
 - `@request.*` macros (`@request.auth.id`, `@request.method`, etc.)
-- Field modifiers (`:lower`, `:upper`, `:length`, `:isset`, `:each`, etc.)
+- Field modifiers (`:lower`, `:upper`, `:length`, `:isset`, `:each`, `:excerpt`, `:trim`, `:abs`)
+- **geoDistance()** and **strftime()** functions in access rules
 - **AES encryption** for sensitive settings (SMTP password, S3 secret)
 - Rate limiting with configurable rules
 - Helmet security headers
+- Protected file tokens for time-limited signed URLs
 
 ### Realtime
 - **Server-Sent Events (SSE)** at `/api/realtime`
@@ -138,6 +161,7 @@ tspoonbase superuser-create <email> <password>
 - **Local filesystem** with automatic thumbnail generation (via `sharp`)
 - **S3-compatible storage** — AWS S3, MinIO, DigitalOcean Spaces, etc.
 - Protected files with `viewRule` enforcement
+- Time-limited signed URL tokens
 - Multipart upload with `multer`
 
 ### AI Development Tools
@@ -170,7 +194,7 @@ tspoonbase superuser-create <email> <password>
 
 ## Admin UI
 
-After starting the server, visit `http://localhost:8090/_/`.
+After starting the server, visit `http://localhost:8090/_/ `.
 
 Build the admin UI manually:
 ```bash
@@ -237,9 +261,19 @@ curl -X POST http://localhost:8090/api/collections/users/mfa/verify \
 
 ### Admin Login
 ```bash
+# Login
 curl -X POST http://localhost:8090/api/admins/auth-with-password \
   -H "Content-Type: application/json" \
   -d '{"identity":"admin@example.com","password":"secret123"}'
+
+# Refresh
+curl -X POST http://localhost:8090/api/admins/refresh \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+
+# Request password reset
+curl -X POST http://localhost:8090/api/admins/request-password-reset \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com"}'
 ```
 
 ---
@@ -399,6 +433,20 @@ curl -X POST http://localhost:8090/api/collections/posts/records/RECORD_ID/files
 ```
 GET /api/files/:collection/:recordId/:filename
 GET /api/files/:collection/:recordId/:filename?thumb=100x100
+GET /api/files/:collection/:recordId/:filename?download=1
+```
+
+### Protected File Tokens
+For files behind `viewRule`, generate a time-limited token:
+```bash
+# Generate token (requires auth)
+curl -X POST http://localhost:8090/api/files/token \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"collection":"posts","recordId":"RECORD_ID","filename":"image.png"}'
+
+# Use token
+curl http://localhost:8090/api/files/posts/RECORD_ID/image.png?token=SIGNED_JWT
 ```
 
 ### S3 Configuration
@@ -446,6 +494,97 @@ es.onmessage = (e) => console.log(JSON.parse(e.data))
 
 ---
 
+## Migrations
+
+TspoonBase supports JavaScript migrations in the `pb_migrations/` directory.
+
+### Directory Structure
+```
+pb_migrations/
+├── 001_create_posts.js
+├── 002_add_user_roles.js
+└── README.md
+```
+
+### Migration File Format
+```javascript
+// pb_migrations/001_create_posts.js
+module.exports = {
+  async up(app) {
+    const db = app.db().getDataDB()
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS posts (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT,
+        created TEXT,
+        updated TEXT
+      )
+    `)
+  },
+
+  async down(app) {
+    const db = app.db().getDataDB()
+    db.exec(`DROP TABLE IF EXISTS posts`)
+  }
+}
+```
+
+### Running Migrations
+
+**Automatic:** Migrations run automatically on server start.
+
+**CLI:**
+```bash
+# Run pending migrations
+tspoonbase migrate up
+
+# Rollback last migration
+tspoonbase migrate down
+
+# Rollback 3 migrations
+tspoonbase migrate down 3
+
+# Check status
+tspoonbase migrate status
+```
+
+**Programmatic:**
+```typescript
+const app = new TspoonBase()
+await app.bootstrap()
+
+// Run all pending migrations
+await app.migrate()
+
+// Rollback last 2 migrations
+await app.migrateDown(2)
+
+// Get status
+const status = app.migrationStatus()
+console.log(status)
+```
+
+---
+
+## JavaScript Hooks
+
+Drop `.js` files in a `pb_hooks/` directory in your project root. They run in a sandboxed VM on server start.
+
+```javascript
+// pb_hooks/on_record_create.js
+onRecordCreate('posts', (e) => {
+  console.log('New post created:', e.record.get('title'))
+})
+```
+
+Available globals:
+- `$app` — app proxy with `settings()`, `db()`, `findCollectionByNameOrId()`, etc.
+- `onBootstrap`, `onServe`, `onRecordCreate`, `onRecordUpdate`, `onRecordDelete`
+- Standard JS: `console`, `require`, `Buffer`, `JSON`, `Date`, etc.
+
+---
+
 ## API Reference
 
 ### Collections
@@ -484,6 +623,17 @@ es.onmessage = (e) => console.log(JSON.parse(e.data))
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/admins/auth-with-password` | Admin login |
+| POST | `/api/admins/refresh` | Refresh admin token |
+| POST | `/api/admins/request-password-reset` | Request password reset |
+| POST | `/api/admins/confirm-password-reset` | Confirm password reset |
+
+### Files
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/files/token` | Generate protected file token |
+| GET | `/api/files/:c/:recordId/:filename` | Download file |
+| POST | `/api/collections/:c/records/:id/files` | Upload files |
+| DELETE | `/api/collections/:c/records/:id/files/:filename` | Delete file |
 
 ### Other
 | Method | Endpoint | Description |
@@ -495,24 +645,6 @@ es.onmessage = (e) => console.log(JSON.parse(e.data))
 | GET/POST | `/api/backups` | Backup management |
 | GET/PATCH | `/api/settings` | App settings |
 | POST | `/api/ai/*` | AI tools |
-
----
-
-## JavaScript Hooks
-
-Drop `.js` files in a `pb_hooks/` directory in your project root. They run in a sandboxed VM on server start.
-
-```javascript
-// pb_hooks/on_record_create.js
-onRecordCreate('posts', (e) => {
-  console.log('New post created:', e.record.get('title'))
-})
-```
-
-Available globals:
-- `$app` — app proxy with `settings()`, `db()`, `findCollectionByNameOrId()`, etc.
-- `onBootstrap`, `onServe`, `onRecordCreate`, `onRecordUpdate`, `onRecordDelete`
-- Standard JS: `console`, `require`, `Buffer`, `JSON`, `Date`, etc.
 
 ---
 
@@ -571,7 +703,7 @@ curl -X PATCH http://localhost:8090/api/settings \
 ```
 src/
 ├── pocketbase.ts          # TspoonBase class, bootstrap, JS migrations
-├── cli.ts                 # CLI: serve, superuser-create
+├── cli.ts                 # CLI: serve, superuser-create, migrate
 ├── core/
 │   ├── base.ts            # BaseApp: hooks, DB, settings, collections
 │   ├── db.ts              # Dual SQLite (data.db + auxiliary.db)
@@ -580,7 +712,7 @@ src/
 │   ├── field.ts           # 14 field types including vector
 │   ├── settings.ts        # AppSettings + encryption
 │   ├── record_query.ts    # findById, filter, count, vectorSearch
-│   ├── record_field_resolver.ts  # @request.* macros + modifiers
+│   ├── record_field_resolver.ts  # @request.* macros + modifiers + functions
 │   ├── record_upsert.ts   # Validation + array modifiers (+field, field-)
 │   ├── schema_sync.ts     # Auto table creation/alteration
 │   ├── migration.ts       # MigrationRunner with status/rollback
@@ -596,10 +728,10 @@ src/
 │   ├── collection.ts      # Collection management
 │   ├── settings.ts        # Settings CRUD
 │   ├── realtime.ts        # SSE + WebSocket broker
-│   ├── file.ts            # Upload/download with auth checks
+│   ├── file.ts            # Upload/download with auth + tokens
 │   ├── batch.ts           # Transaction-wrapped batch API
 │   ├── auth_flows.ts      # Password reset, verification, email change
-│   ├── admin_auth.ts      # Admin login
+│   ├── admin_auth.ts      # Admin login, refresh, password reset
 │   ├── ai.ts              # AI endpoints
 │   ├── backup.ts          # Backup listing/management
 │   ├── logs.ts            # Log viewer
@@ -639,9 +771,12 @@ src/
 | Email Templates | ✅ | ✅ |
 | Schema Sync | ✅ | ✅ |
 | Record Expansion | ✅ | ✅ |
-| Filter Operators | `= != > < ~ % @ ?=` | `= != > < ~ % @ ?= ?:` |
+| Filter Operators | `= != > < ~ % @ ?=` | `= != > < ~ % @ ?= ?: ?~` |
 | View Collections | ✅ | ✅ (SQL views) |
 | Rate Limiting | ✅ | ✅ (configurable) |
+| Back-relations | ✅ | ✅ |
+| Protected File Tokens | ✅ | ✅ |
+| Admin Password Reset | ✅ | ✅ |
 
 ---
 
@@ -657,9 +792,6 @@ npm install
 
 # Run in dev mode
 npm run dev
-
-# Run tests
-npm test
 
 # Type check
 npm run typecheck

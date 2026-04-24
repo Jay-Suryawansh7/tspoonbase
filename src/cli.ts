@@ -78,4 +78,91 @@ program
     })
   })
 
+const migrate = program
+  .command('migrate')
+  .description('manage database migrations')
+
+migrate
+  .command('up')
+  .description('run pending migrations')
+  .option('--dir <path>', 'data directory', './pb_data')
+  .action(async (opts) => {
+    const { TspoonBase } = await import('./pocketbase')
+    const app = new TspoonBase({
+      defaultDev: false,
+      defaultDataDir: opts.dir,
+    })
+    await app.bootstrap()
+    await app.migrate()
+    console.log('Migrations completed.')
+    process.exit(0)
+  })
+
+migrate
+  .command('down')
+  .description('rollback migrations')
+  .argument('[count]', 'number of migrations to rollback', '1')
+  .option('--dir <path>', 'data directory', './pb_data')
+  .action(async (count, opts) => {
+    const { TspoonBase } = await import('./pocketbase')
+    const app = new TspoonBase({
+      defaultDev: false,
+      defaultDataDir: opts.dir,
+    })
+    await app.bootstrap()
+    await app.migrateDown(parseInt(count, 10))
+    console.log(`Rolled back ${count} migration(s).`)
+    process.exit(0)
+  })
+
+migrate
+  .command('status')
+  .description('show migration status')
+  .option('--dir <path>', 'data directory', './pb_data')
+  .action(async (opts) => {
+    const { TspoonBase } = await import('./pocketbase')
+    const app = new TspoonBase({
+      defaultDev: false,
+      defaultDataDir: opts.dir,
+    })
+    await app.bootstrap()
+    const status = app.migrationStatus()
+    console.table(status)
+    process.exit(0)
+  })
+
+migrate
+  .command('create')
+  .description('create a new migration file')
+  .argument('<name>', 'migration name')
+  .option('--dir <path>', 'migrations directory', './pb_migrations')
+  .action(async (name, opts) => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const dir = opts.dir
+
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+
+    const timestamp = Date.now()
+    const filename = `${timestamp}_${name}.js`
+    const filepath = path.join(dir, filename)
+
+    const template = `module.exports = {
+  async up(app) {
+    const db = app.db().getDataDB()
+    // Add your migration here
+  },
+
+  async down(app) {
+    const db = app.db().getDataDB()
+    // Add rollback logic here
+  }
+}
+`
+    fs.writeFileSync(filepath, template)
+    console.log(`Created migration: ${filepath}`)
+  })
+
 program.parse(process.argv)
