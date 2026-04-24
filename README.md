@@ -678,4 +678,4 @@ npm run build
 
 ## License
 
-MIT © [Jay Suryawansh](https://github.com/Jay-Suryawansh7)
+MIT © [Jay Suryawanshi](https://github.com/Jay-Suryawansh7)
