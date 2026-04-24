@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { TspoonBase } from './pocketbase'
+import { TspoonBase } from './tspoonbase'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
@@ -87,7 +87,7 @@ migrate
   .description('run pending migrations')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (opts) => {
-    const { TspoonBase } = await import('./pocketbase')
+    const { TspoonBase } = await import('./tspoonbase')
     const app = new TspoonBase({
       defaultDev: false,
       defaultDataDir: opts.dir,
@@ -104,7 +104,7 @@ migrate
   .argument('[count]', 'number of migrations to rollback', '1')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (count, opts) => {
-    const { TspoonBase } = await import('./pocketbase')
+    const { TspoonBase } = await import('./tspoonbase')
     const app = new TspoonBase({
       defaultDev: false,
       defaultDataDir: opts.dir,
@@ -120,7 +120,7 @@ migrate
   .description('show migration status')
   .option('--dir <path>', 'data directory', './pb_data')
   .action(async (opts) => {
-    const { TspoonBase } = await import('./pocketbase')
+    const { TspoonBase } = await import('./tspoonbase')
     const app = new TspoonBase({
       defaultDev: false,
       defaultDataDir: opts.dir,

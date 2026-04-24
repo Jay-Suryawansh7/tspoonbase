@@ -91,7 +91,7 @@ export class JSVM {
       Intl,
       URL,
       URLSearchParams,
-      // PocketBase-style globals
+      // TspoonBase globals
       $app: this.createAppProxy(),
       $apis: {
         record: '/api/collections',

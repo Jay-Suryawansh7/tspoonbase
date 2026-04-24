@@ -39,7 +39,7 @@ Convert natural language descriptions into full Collection schemas.
 ### 2. AI Access Rule Translator
 **Endpoint:** `POST /api/ai/generate-rule`
 
-Convert plain English security requirements into PocketBase filter expressions.
+Convert plain English security requirements into TspoonBase filter expressions.
 
 **Input:**
 ```json

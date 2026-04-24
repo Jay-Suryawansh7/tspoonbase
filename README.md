@@ -702,7 +702,7 @@ curl -X PATCH http://localhost:8090/api/settings \
 
 ```
 src/
-├── pocketbase.ts          # TspoonBase class, bootstrap, JS migrations
+├── tspoonbase.ts          # TspoonBase class, bootstrap, JS migrations
 ├── cli.ts                 # CLI: serve, superuser-create, migrate
 ├── core/
 │   ├── base.ts            # BaseApp: hooks, DB, settings, collections
