@@ -21,6 +21,17 @@ export interface RecordFieldResolverOptions {
   hiddenFields?: Set<string>
 }
 
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000 // Earth radius in meters
+  const toRad = (deg: number) => deg * (Math.PI / 180)
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
 export class RecordFieldResolver {
   private app: BaseApp | null
   private record: PBRecord | null
@@ -47,11 +58,99 @@ export class RecordFieldResolver {
       return this.resolveCollection(parts.slice(1))
     }
 
+    // Handle function calls like geoDistance(...)
+    const funcMatch = path.match(/^(\w+)\s*\((.*)\)$/)
+    if (funcMatch) {
+      return this.resolveFunctionCall(funcMatch[1], funcMatch[2])
+    }
+
     if (this.record) {
       return this.resolveRecordField(parts)
     }
 
     return undefined
+  }
+
+  private resolveFunctionCall(name: string, argsStr: string): any {
+    const args = this.parseFunctionArgs(argsStr)
+    switch (name) {
+      case 'geoDistance': {
+        // geoDistance(lat1, lng1, lat2, lng2) -> meters
+        if (args.length >= 4) {
+          const [lat1, lng1, lat2, lng2] = args.map(a => Number(a))
+          if (!isNaN(lat1) && !isNaN(lng1) && !isNaN(lat2) && !isNaN(lng2)) {
+            return haversineDistance(lat1, lng1, lat2, lng2)
+          }
+        }
+        return undefined
+      }
+      case 'strftime': {
+        // strftime(format, timestamp) -> formatted string
+        if (args.length >= 2) {
+          const format = String(args[0])
+          const ts = args[1]
+          const date = typeof ts === 'number' ? new Date(ts) : new Date(String(ts))
+          if (isNaN(date.getTime())) return ''
+          // Simple SQLite-like strftime support
+          let result = format
+          result = result.replace('%Y', String(date.getFullYear()).padStart(4, '0'))
+          result = result.replace('%m', String(date.getMonth() + 1).padStart(2, '0'))
+          result = result.replace('%d', String(date.getDate()).padStart(2, '0'))
+          result = result.replace('%H', String(date.getHours()).padStart(2, '0'))
+          result = result.replace('%M', String(date.getMinutes()).padStart(2, '0'))
+          result = result.replace('%S', String(date.getSeconds()).padStart(2, '0'))
+          result = result.replace('%w', String(date.getDay()))
+          result = result.replace('%s', String(Math.floor(date.getTime() / 1000)))
+          return result
+        }
+        return ''
+      }
+      default:
+        return undefined
+    }
+  }
+
+  private parseFunctionArgs(argsStr: string): any[] {
+    const args: any[] = []
+    let current = ''
+    let depth = 0
+    let inQuotes = false
+    let quoteChar = ''
+
+    for (let i = 0; i < argsStr.length; i++) {
+      const char = argsStr[i]
+      if (inQuotes) {
+        current += char
+        if (char === quoteChar) inQuotes = false
+        continue
+      }
+      if (char === '"' || char === "'") {
+        inQuotes = true
+        quoteChar = char
+        current += char
+        continue
+      }
+      if (char === '(') { depth++; current += char; continue }
+      if (char === ')') { depth--; current += char; continue }
+      if (char === ',' && depth === 0) {
+        args.push(this.resolveFunctionArg(current.trim()))
+        current = ''
+        continue
+      }
+      current += char
+    }
+    if (current.trim()) args.push(this.resolveFunctionArg(current.trim()))
+    return args
+  }
+
+  private resolveFunctionArg(arg: string): any {
+    arg = arg.trim()
+    if (arg.startsWith('"') && arg.endsWith('"')) return arg.slice(1, -1)
+    if (arg.startsWith("'") && arg.endsWith("'")) return arg.slice(1, -1)
+    if (/^-?\d+$/.test(arg)) return parseInt(arg, 10)
+    if (/^-?\d+\.\d+$/.test(arg)) return parseFloat(arg)
+    // Try to resolve as a field path
+    return this.resolve(arg)
   }
 
   private resolveRequest(parts: string[]): any {
@@ -104,6 +203,40 @@ export class RecordFieldResolver {
 
     const fieldName = parts[0]
     if (this.hiddenFields.has(fieldName)) return undefined
+
+    // Handle back-relations: collectionName_via_fieldName
+    const backRelMatch = fieldName.match(/^(.+?)_via_(.+)$/)
+    if (backRelMatch && this.app) {
+      const targetCollectionName = backRelMatch[1]
+      const relationFieldName = backRelMatch[2]
+      const targetCollection = this.app.findCachedCollectionByNameOrId(targetCollectionName)
+      if (targetCollection) {
+        try {
+          const db = this.app.db().getDataDB()
+          const tableName = `_r_${targetCollection.id}`
+          const rows = db.prepare(
+            `SELECT * FROM ${tableName} WHERE json_extract(${relationFieldName}, '$') = ? OR ${relationFieldName} LIKE ? OR ${relationFieldName} LIKE ? OR ${relationFieldName} LIKE ? LIMIT 1000`
+          ).all(
+            `"${this.record.id}"`,
+            `%"${this.record.id}"%`,
+            `${this.record.id}`,
+            `%,${this.record.id},%`
+          ) as any[]
+          return rows.map(row => new PBRecord(targetCollection.id, targetCollection.name, row))
+        } catch {
+          // Fallback: try simple equality
+          try {
+            const db = this.app.db().getDataDB()
+            const tableName = `_r_${targetCollection.id}`
+            const rows = db.prepare(`SELECT * FROM ${tableName} WHERE ${relationFieldName} = ? LIMIT 1000`).all(this.record.id) as any[]
+            return rows.map(row => new PBRecord(targetCollection.id, targetCollection.name, row))
+          } catch {
+            return []
+          }
+        }
+      }
+      return []
+    }
 
     const value = this.record.get(fieldName)
     if (parts.length === 1) return value

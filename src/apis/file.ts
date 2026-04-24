@@ -10,7 +10,72 @@ import { createHash } from 'crypto'
 
 const upload = multer({ dest: 'uploads/' })
 
+function generateFileToken(app: BaseApp, collectionId: string, recordId: string, filename: string): string {
+  return app.generateJWT(
+    { type: 'file', collectionId, recordId, filename },
+    app.settings().appName || 'secret',
+    '1h'
+  )
+}
+
+function verifyFileToken(app: BaseApp, token: string): { collectionId: string; recordId: string; filename: string } | null {
+  try {
+    const payload = app.parseJWT(token, app.settings().appName || 'secret')
+    if (!payload || payload.type !== 'file') return null
+    return { collectionId: payload.collectionId, recordId: payload.recordId, filename: payload.filename }
+  } catch {
+    return null
+  }
+}
+
 export function registerFileRoutes(app: BaseApp, router: Router): void {
+  // Generate protected file token
+  router.post('/api/files/token', async (req: Request, res: Response) => {
+    try {
+      const { collection: collectionIdOrName, recordId, filename } = req.body
+      if (!collectionIdOrName || !recordId || !filename) {
+        return res.status(400).json({ code: 400, message: 'Missing collection, recordId, or filename.' })
+      }
+
+      const collection = await app.findCollectionByNameOrId(collectionIdOrName)
+      if (!collection) {
+        return res.status(404).json({ code: 404, message: 'Collection not found.' })
+      }
+
+      const db = app.db().getDataDB()
+      const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(recordId) as any
+      if (!row) {
+        return res.status(404).json({ code: 404, message: 'Record not found.' })
+      }
+
+      const record = new PBRecord(collection.id, collection.name, row)
+
+      // Check viewRule for file access
+      const requestInfo: RequestInfo = {
+        auth: req.authContext?.record ?? null,
+        isAdmin: req.authContext?.isAdmin ?? false,
+        method: req.method,
+        headers: req.headers as Record<string, string>,
+        query: req.query as Record<string, string>,
+        body: req.body,
+        data: req.body,
+        context: 'view',
+      }
+
+      if (collection.viewRule !== null) {
+        const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
+        if (!accessible) {
+          return res.status(403).json({ code: 403, message: 'File access denied.' })
+        }
+      }
+
+      const token = generateFileToken(app, collection.id, recordId, filename)
+      res.json({ token })
+    } catch (err: any) {
+      res.status(500).json({ code: 500, message: err.message })
+    }
+  })
+
   // File upload endpoint
   router.post('/api/collections/:collectionIdOrName/records/:recordId/files', upload.array('files', 10), async (req: Request, res: Response) => {
     try {
@@ -77,6 +142,7 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
       const { collectionIdOrName, recordId, filename } = req.params
       const thumb = req.query.thumb as string
       const download = req.query.download === '1'
+      const fileToken = req.query.token as string
 
       const collection = await app.findCollectionByNameOrId(collectionIdOrName)
       if (!collection) {
@@ -91,22 +157,30 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
 
       const record = new PBRecord(collection.id, collection.name, row)
 
-      // Check viewRule for file access
-      const requestInfo: RequestInfo = {
-        auth: req.authContext?.record ?? null,
-        isAdmin: req.authContext?.isAdmin ?? false,
-        method: req.method,
-        headers: req.headers as Record<string, string>,
-        query: req.query as Record<string, string>,
-        body: req.body,
-        data: req.body,
-        context: 'view',
-      }
+      // If a file token is provided, verify it first
+      if (fileToken) {
+        const tokenPayload = verifyFileToken(app, fileToken)
+        if (!tokenPayload || tokenPayload.collectionId !== collection.id || tokenPayload.recordId !== recordId || tokenPayload.filename !== filename) {
+          return res.status(403).json({ code: 403, message: 'Invalid or expired file token.' })
+        }
+      } else {
+        // Otherwise check viewRule for file access
+        const requestInfo: RequestInfo = {
+          auth: req.authContext?.record ?? null,
+          isAdmin: req.authContext?.isAdmin ?? false,
+          method: req.method,
+          headers: req.headers as Record<string, string>,
+          query: req.query as Record<string, string>,
+          body: req.body,
+          data: req.body,
+          context: 'view',
+        }
 
-      if (collection.viewRule !== null) {
-        const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
-        if (!accessible) {
-          return res.status(404).json({ code: 404, message: 'File not found.' })
+        if (collection.viewRule !== null) {
+          const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
+          if (!accessible) {
+            return res.status(404).json({ code: 404, message: 'File not found.' })
+          }
         }
       }
 

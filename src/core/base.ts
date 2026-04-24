@@ -185,7 +185,7 @@ export class BaseApp {
     return collection
   }
 
-  async findCachedCollectionByNameOrId(nameOrId: string): Promise<Collection | null> {
+  findCachedCollectionByNameOrId(nameOrId: string): Collection | null {
     return this._collectionCache.get(nameOrId.toLowerCase()) ?? this._collectionCache.get(nameOrId) ?? null
   }
 

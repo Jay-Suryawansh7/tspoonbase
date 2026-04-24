@@ -115,4 +115,27 @@ describe('Filter Parser', () => {
     expect(where).toContain('LIKE')
     expect(params).toContain('%lu%')
   })
+
+  it('should parse ?~ (any like) operator', () => {
+    const ast = parseFilter('tags ?~ "lu"')
+    expect((ast as any).operator).toBe('?~')
+    expect((ast as any).value).toBe('lu')
+  })
+
+  it('should evaluate ?~ operator on arrays', () => {
+    const ast = parseFilter('tags ?~ "lu"')
+    const result = evaluateFilterAST(ast, (field) => {
+      if (field === 'tags') return ['blue', 'purple']
+      return undefined
+    })
+    expect(result).toBe(true)
+  })
+
+  it('should build SQL for ?~ operator', () => {
+    const ast = parseFilter('tags ?~ "lu"')
+    const { where, params } = buildSQL(ast)
+    expect(where).toContain('json_each')
+    expect(where).toContain('LIKE')
+    expect(params).toContain('%lu%')
+  })
 })

@@ -153,4 +153,27 @@ describe('evaluateRule', () => {
     const resolver = new RecordFieldResolver({ requestInfo })
     expect(evaluateRule('@request.auth.id != ""', resolver)).toBe(true)
   })
+
+  it('should evaluate geoDistance function', () => {
+    const record = new PBRecord('col1', 'test', {
+      lat: 40.7128,
+      lng: -74.0060,
+    })
+    const resolver = new RecordFieldResolver({ record })
+    // Distance from NYC (40.7128, -74.0060) to LA (34.0522, -118.2437) is ~3935 km
+    const result = evaluateRule('geoDistance(lat, lng, 34.0522, -118.2437) > 3000000', resolver)
+    expect(result).toBe(true)
+    const result2 = evaluateRule('geoDistance(lat, lng, 34.0522, -118.2437) < 5000000', resolver)
+    expect(result2).toBe(true)
+  })
+
+  it('should evaluate strftime function', () => {
+    const record = new PBRecord('col1', 'test', {
+      created: '2024-03-15T10:30:00.000Z',
+    })
+    const resolver = new RecordFieldResolver({ record })
+    // strftime('%Y', created) should return '2024'
+    const result = evaluateRule('strftime("%Y", created) = "2024"', resolver)
+    expect(result).toBe(true)
+  })
 })

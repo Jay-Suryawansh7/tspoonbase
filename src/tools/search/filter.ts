@@ -175,6 +175,7 @@ function normalizeOperator(op: string): string | null {
     '!@': '!@',
     '?=': '?=',
     '?:': '?:',
+    '?~': '?~',
     'IN': 'in',
     'in': 'in',
     'NOT': 'not',
@@ -260,6 +261,9 @@ export function buildSQL(ast: FilterAST, paramOffset = 0): { where: string; para
           params.push(value)
           return `EXISTS (SELECT 1 FROM json_each(${field}) WHERE json_each.value = ?)`
         case '?:':
+          params.push(`%${value}%`)
+          return `EXISTS (SELECT 1 FROM json_each(${field}) WHERE CAST(json_each.value AS TEXT) LIKE ?)`
+        case '?~':
           params.push(`%${value}%`)
           return `EXISTS (SELECT 1 FROM json_each(${field}) WHERE CAST(json_each.value AS TEXT) LIKE ?)`
         case 'not':
@@ -366,6 +370,21 @@ export function evaluateFilterAST(ast: FilterAST, getValue: (field: string) => a
         }
         return fieldValue == compareValue
       case '?:':
+        if (Array.isArray(fieldValue)) {
+          return fieldValue.some(v => String(v).toLowerCase().includes(String(compareValue).toLowerCase()))
+        }
+        if (typeof fieldValue === 'string') {
+          try {
+            const parsed = JSON.parse(fieldValue)
+            if (Array.isArray(parsed)) {
+              return parsed.some((v: any) => String(v).toLowerCase().includes(String(compareValue).toLowerCase()))
+            }
+          } catch {
+            // ignore
+          }
+        }
+        return String(fieldValue).toLowerCase().includes(String(compareValue).toLowerCase())
+      case '?~':
         if (Array.isArray(fieldValue)) {
           return fieldValue.some(v => String(v).toLowerCase().includes(String(compareValue).toLowerCase()))
         }
