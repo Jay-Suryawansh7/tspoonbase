@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
-import { Plus, Database, Eye, Edit, Trash2 } from 'lucide-react'
+import { Plus, Eye, Edit, Trash2 } from 'lucide-react'
 
 interface Collection {
   id: string

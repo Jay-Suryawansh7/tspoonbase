@@ -7,9 +7,17 @@
   "bin": {
     "tspoonbase": "dist/cli.js"
   },
+  "files": [
+    "dist/**/*",
+    "pb_public/**/*",
+    "pb_migrations/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && npm run build:ui",
     "build:ui": "cd admin && npm install && npm run build",
+    "prepublishOnly": "npm run build",
     "dev": "tsx watch src/cli.ts serve --dev",
     "test": "vitest run",
     "test:watch": "vitest",

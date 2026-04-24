@@ -11,7 +11,7 @@ export default function Records() {
   const [perPage] = useState(20)
   const [totalItems, setTotalItems] = useState(0)
   const [filter, setFilter] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [newRecord, setNewRecord] = useState<Record<string, any>>({})
 

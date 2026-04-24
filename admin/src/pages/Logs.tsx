@@ -6,7 +6,7 @@ export default function Logs() {
   const [page, setPage] = useState(1)
   const [perPage] = useState(50)
   const [totalItems, setTotalItems] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
 
   useEffect(() => {
     loadLogs()

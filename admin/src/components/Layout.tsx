@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Database, Settings, LogOut, FileText,
-  Archive, Bot, ChevronRight
+  Archive, Bot
 } from 'lucide-react'
 import { ReactNode } from 'react'
 

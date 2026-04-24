@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
-import { Database, Users, FileText, HardDrive } from 'lucide-react'
+import { Database, Users, HardDrive } from 'lucide-react'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ collections: 0, records: 0, users: 0, logs: 0 })
