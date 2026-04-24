@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/npm/v/tspoonbase.svg?style=flat-square&color=blue" alt="npm version">
   <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg?style=flat-square" alt="Node.js">
   <img src="https://img.shields.io/npm/dm/tspoonbase.svg?style=flat-square&color=orange" alt="Downloads">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License">
 </p>
 
 <p align="center">
@@ -810,4 +810,4 @@ npm run build
 
 ## License
 
-MIT © [Jay Suryawanshi](https://github.com/Jay-Suryawansh7)
+Apache-2.0 © [Jay Suryawanshi](https://github.com/Jay-Suryawansh7)

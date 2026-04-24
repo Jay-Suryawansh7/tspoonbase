@@ -1,8 +1,9 @@
 {
   "name": "tspoonbase",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "TspoonBase - a TypeScript backend-as-a-service with SQLite, auth, realtime, and admin UI. Inspired by PocketBase.",
   "repository": "https://github.com/Jay-Suryawansh7/tspoonbase",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
