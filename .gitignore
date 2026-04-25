@@ -48,3 +48,6 @@ coverage/
 
 # Graphify output
 graphify-out/
+
+# Documentation site
+public_site/
