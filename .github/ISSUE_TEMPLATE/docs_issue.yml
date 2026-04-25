@@ -1,0 +1,26 @@
+---
+name: Documentation Issue
+about: Report missing, incorrect, or unclear documentation
+title: '[Docs] '
+labels: documentation
+assignees: ''
+---
+
+## Which Page/Section
+Link or describe which part of the documentation needs improvement.
+
+## Issue Type
+- [ ] Missing documentation
+- [ ] Incorrect information
+- [ ] Unclear explanation
+- [ ] Outdated content
+- [ ] Typo/grammar
+
+## Description
+Describe what's wrong or missing.
+
+## Suggested Improvement
+If you have a suggestion for the fix, describe it here.
+
+## Additional Context
+Add any other context or screenshots.

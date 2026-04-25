@@ -1,0 +1,43 @@
+---
+name: Bug Report
+about: Report a bug or unexpected behavior
+title: '[Bug] '
+labels: bug
+assignees: ''
+---
+
+## Describe the Bug
+A clear and concise description of what the bug is.
+
+## To Reproduce
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Run command '...'
+3. See error
+
+## Expected Behavior
+A clear and concise description of what you expected to happen.
+
+## Actual Behavior
+What actually happened instead.
+
+## Environment
+- **TspoonBase version:** e.g. 0.2.6
+- **Node.js version:** e.g. 20.x
+- **OS:** e.g. macOS 14, Ubuntu 22.04
+- **Database:** e.g. SQLite (default)
+
+## Code Snippet
+If applicable, add a minimal code snippet that reproduces the issue:
+
+```typescript
+// Your code here
+```
+
+## Logs
+```
+Paste any relevant error logs or stack traces here
+```
+
+## Additional Context
+Add any other context about the problem here (screenshots, related issues, etc.).
