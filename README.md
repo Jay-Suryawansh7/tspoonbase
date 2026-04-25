@@ -220,6 +220,25 @@ The built assets are served from `pb_public/admin/`.
 
 ## Authentication
 
+```mermaid
+flowchart TD
+    Start([Client Request]) --> IsAuth{Authenticated?}
+    IsAuth -->|No| Strategy{Choose Strategy}
+    Strategy -->|Email| EP[Email / Password]
+    Strategy -->|OAuth2| OA[OAuth2 Provider]
+    Strategy -->|OTP| OT[One-Time Password]
+    Strategy -->|MFA| MF[MFA / TOTP]
+    EP --> Validate[Validate Credentials]
+    OA --> Validate
+    OT --> Validate
+    MF --> Validate
+    Validate -->|Success| Issue[Issue JWT + Refresh]
+    Validate -->|Fail| Deny[Deny Access]
+    Issue --> Token[Return Token]
+    IsAuth -->|Yes| Token
+    Token --> API[Access API]
+```
+
 ### Email/Password
 ```bash
 # Login
@@ -290,6 +309,26 @@ curl -X POST http://localhost:8090/api/admins/request-password-reset \
 ---
 
 ## Collections & Records
+
+```mermaid
+flowchart TD
+    A[Define Collection] --> B[Schema Sync]
+    B --> C[SQLite Table Created]
+    C --> D[API Endpoints Active]
+    D --> E{CRUD Operation}
+    E -->|Create| F[Validate Fields]
+    E -->|Read| G[Apply API Rules]
+    E -->|Update| H[Check Update Rule]
+    E -->|Delete| I[Check Delete Rule]
+    F --> J[Insert Record]
+    G --> K[Return Filtered Data]
+    H --> L[Patch Record]
+    I --> M[Remove Record]
+    J --> N[Trigger Hooks]
+    L --> N
+    M --> N
+    N --> O[Realtime Broadcast]
+```
 
 ### Create a Collection
 ```bash
@@ -434,6 +473,25 @@ curl -X POST http://localhost:8090/api/collections/documents/vector-search \
 
 ## File Storage
 
+```mermaid
+flowchart LR
+    A[Client Upload] --> B{Has File Field?}
+    B -->|No| C[Reject 400]
+    B -->|Yes| D[Validate MIME / Size]
+    D --> E{Storage Driver}
+    E -->|Local| F[Save to Disk]
+    E -->|S3| G[Stream to Bucket]
+    F --> H[Generate Thumbnail]
+    G --> H
+    H --> I[Store Path in DB]
+    I --> J[Return File URL]
+    J --> K[Client Requests File]
+    K --> L{Protected?}
+    L -->|Yes| M[Verify Token]
+    M --> N[Serve File]
+    L -->|No| N
+```
+
 ### Upload files
 ```bash
 curl -X POST http://localhost:8090/api/collections/posts/records/RECORD_ID/files \
@@ -479,6 +537,25 @@ Configure via Admin UI or API:
 ---
 
 ## Realtime
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant WS as WebSocket / SSE
+    participant Broker as Subscription Broker
+    participant DB as SQLite
+    Client->>WS: Connect
+    WS->>Broker: Register Client
+    Client->>WS: Subscribe to collections.posts
+    WS->>Broker: Add to Channel
+    DB->>Broker: Record Changed
+    Broker->>WS: Broadcast Event
+    WS->>Client: event: update, record
+    Client->>WS: Unsubscribe
+    WS->>Broker: Remove from Channel
+    Client->>WS: Disconnect
+    WS->>Broker: Cleanup Client
+```
 
 ### WebSocket
 ```javascript
@@ -598,6 +675,23 @@ Available globals:
 
 ## API Reference
 
+```mermaid
+flowchart TD
+    A[Client Request] --> B{Auth Header?}
+    B -->|Yes| C[Validate JWT]
+    B -->|No| D[Public Endpoint?]
+    C -->|Valid| E[Extract User / Admin]
+    C -->|Invalid| F[401 Unauthorized]
+    D -->|Yes| G[Apply API Rules]
+    D -->|No| F
+    E --> G
+    G -->|Allowed| H[Execute Handler]
+    G -->|Denied| I[403 Forbidden]
+    H --> J[Return JSON Response]
+    F --> K[Return Error JSON]
+    I --> K
+```
+
 ### Collections
 | Method | Endpoint | Auth |
 |--------|----------|------|
@@ -711,6 +805,54 @@ curl -X PATCH http://localhost:8090/api/settings \
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    subgraph Client
+      A[Web App]
+      B[Mobile App]
+      C[Admin UI]
+    end
+    subgraph Server
+      D[Express HTTP]
+      E[Auth Middleware]
+      F[API Rules]
+      G[CRUD Handlers]
+      H[Realtime Broker]
+      I[JSVM Hooks]
+    end
+    subgraph Core
+      J[Collections and Records]
+      K[Schema Sync]
+      L[Filter Engine]
+      M[Migrations]
+    end
+    subgraph Storage
+      N[(SQLite data.db)]
+      O[(SQLite auxiliary.db)]
+      P[Local Files]
+      Q[S3 Bucket]
+    end
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> J
+    G --> H
+    H --> A
+    H --> B
+    J --> K
+    J --> L
+    J --> M
+    K --> N
+    K --> O
+    G --> P
+    G --> Q
+    I --> J
+```
+
+### Project Structure
 ```
 src/
 ├── tspoonbase.ts          # TspoonBase class, bootstrap, JS migrations
