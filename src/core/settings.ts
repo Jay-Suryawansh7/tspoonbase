@@ -113,7 +113,7 @@ export function defaultSettings(): AppSettings {
       rules: [],
     },
     batch: {
-      enabled: false,
+      enabled: true,
       maxBatchSize: 100,
     },
     ai: defaultAIConfig(),

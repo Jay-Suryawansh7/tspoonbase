@@ -188,6 +188,16 @@ export class RecordUpsertForm {
       }
     }
 
+    // Set auth-specific fields for new auth records
+    if (!this.record && this.collection.isAuth()) {
+      if (!('emailVisibility' in recordData)) {
+        recordData.emailVisibility = this.data.emailVisibility ?? true
+      }
+      if (!('verified' in recordData)) {
+        recordData.verified = this.data.verified ?? false
+      }
+    }
+
     const record = new PBRecord(this.collection.id, this.collection.name, recordData)
 
     // Set password hash if provided

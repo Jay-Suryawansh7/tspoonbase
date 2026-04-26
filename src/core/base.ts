@@ -164,7 +164,14 @@ export class BaseApp {
     const rows = db.prepare("SELECT * FROM _collections").all() as any[]
     this._collectionCache.clear()
     for (const row of rows) {
-      const collection = new Collection(JSON.parse(row.data))
+      const data = JSON.parse(row.data)
+      const collection = new Collection({
+        ...data,
+        id: row.id,
+        name: row.name,
+        created: row.created,
+        updated: row.updated,
+      })
       this._collectionCache.set(collection.id, collection)
       this._collectionCache.set(collection.name.toLowerCase(), collection)
     }
@@ -176,10 +183,17 @@ export class BaseApp {
     if (cached) return cached
 
     const db = this._db.getDataDB()
-    const row = db.prepare("SELECT data FROM _collections WHERE id = ? OR LOWER(name) = LOWER(?)").get(nameOrId, nameOrId) as { data: string } | undefined
+    const row = db.prepare("SELECT * FROM _collections WHERE id = ? OR LOWER(name) = LOWER(?)").get(nameOrId, nameOrId) as any
     if (!row) return null
 
-    const collection = new Collection(JSON.parse(row.data))
+    const data = JSON.parse(row.data)
+    const collection = new Collection({
+      ...data,
+      id: row.id,
+      name: row.name,
+      created: row.created,
+      updated: row.updated,
+    })
     this._collectionCache.set(collection.id, collection)
     this._collectionCache.set(collection.name.toLowerCase(), collection)
     return collection
