@@ -48,10 +48,18 @@ export function registerAdminAuthRoutes(app: BaseApp, router: Router): void {
       }
 
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+
+      if (app.isTokenRevoked(token, 'admin_refresh')) {
+        return res.status(401).json({ code: 401, message: 'Token has been revoked.' })
+      }
+
+      const secret = app.getJwtSecret()
+      const payload = app.parseJWT(token, secret)
       if (!payload || payload.type !== 'admin') {
         return res.status(401).json({ code: 401, message: 'Invalid or expired token.' })
       }
+
+      app.revokeToken(token, 'admin_refresh', payload.id, 5)
 
       const db = app.db().getDataDB()
       const row = db.prepare(`SELECT * FROM _superusers WHERE id = ?`).get(payload.id) as any
@@ -61,7 +69,7 @@ export function registerAdminAuthRoutes(app: BaseApp, router: Router): void {
 
       const newToken = app.generateJWT(
         { id: row.id, type: 'admin' },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '720h'
       )
 
@@ -89,11 +97,7 @@ export function registerAdminAuthRoutes(app: BaseApp, router: Router): void {
         return res.status(204).send()
       }
 
-      const token = app.generateJWT(
-        { id: row.id, type: 'adminPasswordReset' },
-        app.settings().appName || 'secret',
-        '1h'
-      )
+      const token = app.createPasswordResetToken(row.id, 'admin', 1)
 
       // Send email if SMTP is configured
       try {
@@ -126,19 +130,24 @@ export function registerAdminAuthRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'Passwords do not match.' })
       }
 
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
-      if (!payload || payload.type !== 'adminPasswordReset') {
+      if (!app.isPasswordResetTokenValid(token, 'admin')) {
         return res.status(400).json({ code: 400, message: 'Invalid or expired token.' })
       }
 
-      const db = app.db().getDataDB()
-      const row = db.prepare(`SELECT * FROM _superusers WHERE id = ?`).get(payload.id) as any
+      const revoked = app.revokePasswordResetToken(token, 'admin')
+      if (!revoked) {
+        return res.status(400).json({ code: 400, message: 'Token has already been used.' })
+      }
+
+      const row = app.db().getDataDB().prepare(`SELECT * FROM _superusers WHERE id = (SELECT userId FROM _passwordResetTokens WHERE tokenHash = ? AND type = ?)`).get(
+        require('crypto').createHash('sha256').update(token).digest('hex'), 'admin'
+      ) as any
       if (!row) {
         return res.status(400).json({ code: 400, message: 'Invalid token.' })
       }
 
       const passwordHash = await hashPasswordAsync(password)
-      db.prepare(`UPDATE _superusers SET passwordHash = ? WHERE id = ?`).run(passwordHash, payload.id)
+      app.db().getDataDB().prepare(`UPDATE _superusers SET passwordHash = ? WHERE id = ?`).run(passwordHash, row.id)
 
       res.json({ code: 200, message: 'Password reset successfully.' })
     } catch (err: any) {

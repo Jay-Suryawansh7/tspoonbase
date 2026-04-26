@@ -9,7 +9,8 @@ import {
   RecordEvent, RecordErrorEvent, RecordEnrichEvent, CollectionEvent, BackupEvent
 } from './events'
 import { DateTime } from '../tools/types/types'
-import { hashPassword, verifyPassword, generateJWT, parseJWT } from '../tools/security/crypto'
+import { hashPassword, verifyPassword, parseJWT } from '../tools/security/crypto'
+import jwt from 'jsonwebtoken'
 import { SettingsEncryption } from './settings_encrypt'
 import path from 'path'
 
@@ -483,6 +484,38 @@ export class BaseApp {
       )
     `)
 
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _tokenRevocations (
+        id TEXT PRIMARY KEY,
+        tokenHash TEXT NOT NULL UNIQUE,
+        type TEXT NOT NULL,
+        recordRef TEXT,
+        expiresAt TEXT NOT NULL,
+        created TEXT NOT NULL
+      )
+    `)
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _oauth2States (
+        state TEXT PRIMARY KEY,
+        collectionId TEXT NOT NULL,
+        redirectUri TEXT,
+        expiresAt TEXT NOT NULL,
+        created TEXT NOT NULL
+      )
+    `)
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _passwordResetTokens (
+        tokenHash TEXT PRIMARY KEY,
+        userId TEXT NOT NULL,
+        type TEXT NOT NULL,
+        expiresAt TEXT NOT NULL,
+        usedAt TEXT,
+        created TEXT NOT NULL
+      )
+    `)
+
     const now = new Date().toISOString()
     db.prepare("INSERT OR IGNORE INTO _settings (key, value, created, updated) VALUES (?, ?, ?, ?)").run(
       'main', JSON.stringify(defaultSettings()), now, now
@@ -509,7 +542,7 @@ export class BaseApp {
     if (!secret) {
       throw new Error('JWT_SECRET is required. Configure jwtSecret in settings.')
     }
-    return generateJWT(payload, secret, expiration)
+    return jwt.sign(payload, secret, { expiresIn: expiration } as jwt.SignOptions)
   }
 
   getJwtSecret(): string {
@@ -530,6 +563,77 @@ export class BaseApp {
 
   parseJWT(token: string, secret: string): { [key: string]: any } | null {
     return parseJWT(token, secret)
+  }
+
+  revokeToken(token: string, type: string, recordRef?: string, ttlMinutes = 60): void {
+    const db = this.db().getDataDB()
+    const crypto = require('crypto')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString()
+    const now = new Date().toISOString()
+    const id = crypto.randomBytes(8).toString('hex')
+    db.prepare(
+      `INSERT OR REPLACE INTO _tokenRevocations (id, tokenHash, type, recordRef, expiresAt, created) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(id, tokenHash, type, recordRef || null, expiresAt, now)
+  }
+
+  isTokenRevoked(token: string, type: string): boolean {
+    const db = this.db().getDataDB()
+    const crypto = require('crypto')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const row = db.prepare(
+      `SELECT * FROM _tokenRevocations WHERE tokenHash = ? AND type = ? AND expiresAt > ?`
+    ).get(tokenHash, type, new Date().toISOString()) as any
+    return !!row
+  }
+
+  createOAuth2State(collectionId: string, redirectUri?: string, ttlMinutes = 10): string {
+    const db = this.db().getDataDB()
+    const crypto = require('crypto')
+    const state = crypto.randomBytes(16).toString('hex')
+    const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString()
+    const now = new Date().toISOString()
+    db.prepare(
+      `INSERT OR REPLACE INTO _oauth2States (state, collectionId, redirectUri, expiresAt, created) VALUES (?, ?, ?, ?, ?)`
+    ).run(state, collectionId, redirectUri || null, expiresAt, now)
+    return state
+  }
+
+  revokePasswordResetToken(token: string, type: string): boolean {
+    const db = this.db().getDataDB()
+    const crypto = require('crypto')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const row = db.prepare(
+      `SELECT * FROM _passwordResetTokens WHERE tokenHash = ? AND type = ? AND usedAt IS NULL AND expiresAt > ?`
+    ).get(tokenHash, type, new Date().toISOString()) as any
+    if (!row) return false
+    db.prepare(`UPDATE _passwordResetTokens SET usedAt = ? WHERE tokenHash = ? AND type = ?`).run(
+      new Date().toISOString(), tokenHash, type
+    )
+    return true
+  }
+
+  isPasswordResetTokenValid(token: string, type: string): boolean {
+    const db = this.db().getDataDB()
+    const crypto = require('crypto')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const row = db.prepare(
+      `SELECT * FROM _passwordResetTokens WHERE tokenHash = ? AND type = ? AND usedAt IS NULL AND expiresAt > ?`
+    ).get(tokenHash, type, new Date().toISOString()) as any
+    return !!row
+  }
+
+  createPasswordResetToken(userId: string, type: string, ttlHours = 1): string {
+    const db = this.db().getDataDB()
+    const crypto = require('crypto')
+    const token = crypto.randomBytes(32).toString('hex')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const expiresAt = new Date(Date.now() + ttlHours * 60 * 60 * 1000).toISOString()
+    const now = new Date().toISOString()
+    db.prepare(
+      `INSERT OR REPLACE INTO _passwordResetTokens (tokenHash, userId, type, expiresAt, created) VALUES (?, ?, ?, ?, ?)`
+    ).run(tokenHash, userId, type, expiresAt, now)
+    return token
   }
 
   logger(): any {

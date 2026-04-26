@@ -92,7 +92,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const record = new PBRecord(collection.id, collection.name, row)
       const token = app.generateJWT(
         { id: record.id, type: 'auth', collectionId: collection.id },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '720h'
       )
 
@@ -107,7 +107,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
 
   authRouter.post('/auth-with-oauth2', async (req: Request, res: Response) => {
     try {
-      const { provider, code, codeVerifier, redirectURL, createData } = req.body
+      const { provider, code, codeVerifier, redirectURL, createData, state } = req.body
       const collectionIdOrName = req.params.collectionIdOrName ?? 'users'
 
       if (!provider || !code) {
@@ -123,9 +123,19 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
         return res.status(403).json({ code: 403, message: 'OAuth2 is not enabled for this collection.' })
       }
 
-      const { user: oauthUser } = await handleOAuth2Callback(app, provider, code, codeVerifier, redirectURL)
-
       const db = app.db().getDataDB()
+
+      if (state) {
+        const stateRow = db.prepare(
+          `SELECT * FROM _oauth2States WHERE state = ? AND collectionId = ? AND expiresAt > ?`
+        ).get(state, collection.id, new Date().toISOString()) as any
+        if (!stateRow) {
+          return res.status(403).json({ code: 403, message: 'Invalid or expired OAuth2 state.' })
+        }
+        db.prepare(`DELETE FROM _oauth2States WHERE state = ?`).run(state)
+      }
+
+      const { user: oauthUser } = await handleOAuth2Callback(app, provider, code, codeVerifier, redirectURL)
 
       // Check if external auth already exists
       const existingAuth = db.prepare(
@@ -171,7 +181,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
 
       const token = app.generateJWT(
         { id: record.id, type: 'auth', collectionId: collection.id },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '720h'
       )
 
@@ -218,7 +228,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const record = new PBRecord(collection.id, collection.name, recordRow)
       const token = app.generateJWT(
         { id: record.id, type: 'auth', collectionId: collection.id },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '720h'
       )
 
@@ -293,15 +303,25 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
   authRouter.post('/refresh', async (req: Request, res: Response) => {
     try {
       const { token } = req.body
-      const secret = app.settings().senderAddress || 'secret'
+      if (!token) {
+        return res.status(400).json({ code: 400, message: 'Token is required.' })
+      }
+
+      if (app.isTokenRevoked(token, 'refresh')) {
+        return res.status(401).json({ code: 401, message: 'Token has been revoked.' })
+      }
+
+      const secret = app.getJwtSecret()
       const payload = app.parseJWT(token, secret)
       if (!payload || payload.type !== 'auth') {
         return res.status(401).json({ code: 401, message: 'Invalid token.' })
       }
 
+      app.revokeToken(token, 'refresh', payload.id, 5)
+
       const newToken = app.generateJWT(
         { id: payload.id, type: 'auth', collectionId: payload.collectionId },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '720h'
       )
 

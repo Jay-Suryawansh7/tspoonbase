@@ -26,11 +26,7 @@ export function registerPasswordResetRoutes(app: BaseApp, router: Router): void 
       }
 
       const record = new PBRecord(collection.id, collection.name, row)
-      const token = app.generateJWT(
-        { id: record.id, type: 'passwordReset', collectionId: collection.id },
-        app.settings().appName || 'secret',
-        '1h'
-      )
+      const token = app.createPasswordResetToken(record.id, `collection_${collection.id}`, 1)
 
       const now = new Date().toISOString()
       db.prepare(`UPDATE _r_${collection.id} SET lastResetSentAt = ? WHERE id = ?`).run(now, record.id)
@@ -70,19 +66,26 @@ export function registerPasswordResetRoutes(app: BaseApp, router: Router): void 
         return res.status(400).json({ code: 400, message: 'Invalid collection.' })
       }
 
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
-      if (!payload || payload.type !== 'passwordReset') {
+      const tokenType = `collection_${collection.id}`
+      if (!app.isPasswordResetTokenValid(token, tokenType)) {
         return res.status(400).json({ code: 400, message: 'Invalid or expired token.' })
       }
 
+      const revoked = app.revokePasswordResetToken(token, tokenType)
+      if (!revoked) {
+        return res.status(400).json({ code: 400, message: 'Token has already been used.' })
+      }
+
       const db = app.db().getDataDB()
-      const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(payload.id) as any
+      const row = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = (SELECT userId FROM _passwordResetTokens WHERE tokenHash = ? AND type = ?)`).get(
+        require('crypto').createHash('sha256').update(token).digest('hex'), tokenType
+      ) as any
       if (!row) {
         return res.status(400).json({ code: 400, message: 'Invalid token.' })
       }
 
       const passwordHash = await app.hashPassword(password)
-      db.prepare(`UPDATE _r_${collection.id} SET passwordHash = ?, verified = 1 WHERE id = ?`).run(passwordHash, payload.id)
+      db.prepare(`UPDATE _r_${collection.id} SET passwordHash = ?, verified = 1 WHERE id = ?`).run(passwordHash, row.id)
 
       res.json({ code: 200, message: 'Password reset successfully.' })
     } catch (err: any) {
