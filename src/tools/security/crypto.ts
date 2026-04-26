@@ -2,10 +2,21 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { createHmac, createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto'
 
-const SALT_ROUNDS = 12
+let SALT_ROUNDS = 12
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, SALT_ROUNDS)
+export function setBcryptRounds(rounds: number): void {
+  if (rounds < 10 || rounds > 15) {
+    throw new Error('Bcrypt rounds must be between 10 and 15')
+  }
+  SALT_ROUNDS = rounds
+}
+
+export function getBcryptRounds(): number {
+  return SALT_ROUNDS
+}
+
+export async function hashPassword(password: string, rounds?: number): Promise<string> {
+  return bcrypt.hash(password, rounds ?? SALT_ROUNDS)
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {

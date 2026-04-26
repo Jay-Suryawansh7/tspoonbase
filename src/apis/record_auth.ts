@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express'
+import rateLimit from 'express-rate-limit'
 import { BaseApp } from '../core/base'
 import { RecordModel as PBRecord } from '../core/record'
 import { Collection } from '../core/collection'
@@ -7,10 +8,46 @@ import { DateTime } from '../tools/types/types'
 import { oauth2Registry, handleOAuth2Callback, linkExternalAuth } from '../tools/auth/oauth2'
 import { OTP } from '../core/auth_models'
 
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request): string => {
+    const identity = req.body?.identity || req.ip || 'unknown'
+    return identity
+  },
+  message: { code: 429, message: 'Too many authentication attempts, please try again later.' },
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      code: 429,
+      message: 'Too many authentication attempts, please try again later.',
+    })
+  },
+})
+
+const otpRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request): string => {
+    const email = req.body?.email || req.ip || 'unknown'
+    return email
+  },
+  message: { code: 429, message: 'Too many OTP requests, please try again later.' },
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      code: 429,
+      message: 'Too many OTP requests, please try again later.',
+    })
+  },
+})
+
 export function registerAuthRoutes(app: BaseApp, router: Router): void {
   const authRouter = Router({ mergeParams: true })
 
-  authRouter.post('/auth-with-password', async (req: Request, res: Response) => {
+  authRouter.post('/auth-with-password', authRateLimiter, async (req: Request, res: Response) => {
     try {
       const { identity, password, collectionIdOrName } = req.body
       if (!identity || !password) {
@@ -197,7 +234,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  authRouter.post('/request-otp', async (req: Request, res: Response) => {
+  authRouter.post('/request-otp', otpRateLimiter, async (req: Request, res: Response) => {
     try {
       const { email, collectionIdOrName } = req.body
       if (!email) {
@@ -223,14 +260,15 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const otpId = generateRandomString(16)
       const now = new Date().toISOString()
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+      const requestIp = req.ip || req.socket.remoteAddress || 'unknown'
 
       // Delete any existing OTPs for this record
       db.prepare(`DELETE FROM _otps WHERE recordRef = ? AND collectionId = ?`).run(record.id, collection.id)
 
-      // Store OTP
+      // Store OTP with request IP
       db.prepare(
-        `INSERT INTO _otps (id, recordRef, collectionId, password, sentTo, created, updated, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(otpId, record.id, collection.id, otpPassword, email, now, now, now, expiresAt)
+        `INSERT INTO _otps (id, recordRef, collectionId, password, sentTo, created, updated, createdAt, expiresAt, requestIp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(otpId, record.id, collection.id, otpPassword, email, now, now, now, expiresAt, requestIp)
 
       // Send OTP email if SMTP is configured
       const settings = app.settings()

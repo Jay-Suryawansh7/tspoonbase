@@ -50,4 +50,5 @@ coverage/
 graphify-out/
 
 # Documentation site
-public_site/
+
+.gstack/

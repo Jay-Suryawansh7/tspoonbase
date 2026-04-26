@@ -1,0 +1,25 @@
+{
+  "debug": false,
+  "ip": "0.0.0.0",
+  "port": 8090,
+  "app": "neuralhire",
+  "adminEmail": "admin@neuralhire.local",
+  "jwtSecret": "replace_with_random_jwt_secret",
+  "db": {
+    "driver": "sqlite",
+    "addr": "file:../pb_data/data.db"
+  },
+  "smtp": {
+    "enabled": false
+  },
+  "files": {
+    "dir": "../pb_data/files",
+    "maxSize": 5242880,
+    "thumbs": [],
+    " TOKEN": {
+      "duration": 900,
+      "storage": "disk"
+    }
+  },
+  "openaiApiKey": ""
+}

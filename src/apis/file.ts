@@ -8,7 +8,34 @@ import path from 'path'
 import fs from 'fs'
 import { createHash } from 'crypto'
 
-const upload = multer({ dest: 'uploads/' })
+const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png', 
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'text/plain',
+  'text/csv',
+  'application/json',
+  'application/zip',
+  'application/x-zip-compressed',
+]
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
+const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (ALLOWED_FILE_TYPES.includes(file.mimetype)) {
+    cb(null, true)
+  } else {
+    cb(new Error(`File type not allowed. Allowed types: ${ALLOWED_FILE_TYPES.join(', ')}`))
+  }
+}
+
+const upload = multer({ 
+  dest: 'uploads/',
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter,
+})
 
 function generateFileToken(app: BaseApp, collectionId: string, recordId: string, filename: string): string {
   return app.generateJWT(

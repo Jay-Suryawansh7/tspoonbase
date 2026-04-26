@@ -98,12 +98,36 @@ async function syncViewCollection(app: BaseApp, collection: Collection): Promise
 
   const query = collection.viewOptions?.query
   if (query) {
+    const forbiddenPatterns = [
+      /\bdrop\b/i,
+      /\bdelete\b/i,
+      /\binsert\b/i,
+      /\bupdate\b/i,
+      /\bcreate\s+table\b/i,
+      /\balter\b/i,
+      /\btruncate\b/i,
+    ]
+    
+    for (const pattern of forbiddenPatterns) {
+      if (pattern.test(query)) {
+        app.logger().error(`Forbidden SQL in view query: ${viewName}`, 'View query contains forbidden operations')
+        return { changed: false, addedColumns: [], removedColumns: [], modifiedColumns: [] }
+      }
+    }
+    
+    // Validate it's a SELECT query
+    const trimmed = query.trim().toLowerCase()
+    if (!trimmed.startsWith('select')) {
+      app.logger().error(`Invalid view query: ${viewName}`, 'View query must start with SELECT')
+      return { changed: false, addedColumns: [], removedColumns: [], modifiedColumns: [] }
+    }
+
     try {
       db.exec(`CREATE VIEW ${viewName} AS ${query}`)
     } catch (err: any) {
       app.logger().error(`Failed to create view ${viewName}`, err.message)
     }
-  }
+}
 
   return { changed: false, addedColumns: [], removedColumns: [], modifiedColumns: [] }
 }

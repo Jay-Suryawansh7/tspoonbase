@@ -4,6 +4,7 @@ export interface AppSettings {
   appName: string
   appNameVisible: boolean
   appURL: string
+  jwtSecret: string
   hideControls: boolean
   senderName: string
   senderAddress: string
@@ -73,6 +74,7 @@ export function defaultSettings(): AppSettings {
     appName: 'TspoonBase',
     appNameVisible: false,
     appURL: 'http://localhost:8090',
+    jwtSecret: '',
     hideControls: false,
     senderName: '',
     senderAddress: '',

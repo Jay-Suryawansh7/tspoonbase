@@ -450,6 +450,7 @@ export class BaseApp {
         sentTo TEXT NOT NULL,
         createdAt TEXT NOT NULL,
         expiresAt TEXT NOT NULL,
+        requestIp TEXT,
         created TEXT NOT NULL,
         updated TEXT NOT NULL
       )
@@ -505,7 +506,26 @@ export class BaseApp {
   }
 
   generateJWT(payload: { [key: string]: any }, secret: string, expiration: string = '720h'): string {
+    if (!secret) {
+      throw new Error('JWT_SECRET is required. Configure jwtSecret in settings.')
+    }
     return generateJWT(payload, secret, expiration)
+  }
+
+  getJwtSecret(): string {
+    const secret = this._settings?.jwtSecret
+    if (!secret) {
+      this.logger().warn('JWT_SECRET not configured - using appName. Set jwtSecret in settings for production!')
+      return this._settings?.appName || 'tspoonbase-default-secret'
+    }
+    if (secret.length < 32) {
+      this.logger().warn('JWT_SECRET should be at least 32 characters for security!')
+    }
+    return secret
+  }
+
+  getJwtSecretSafe(): string {
+    return this._settings?.jwtSecret || ''
   }
 
   parseJWT(token: string, secret: string): { [key: string]: any } | null {
