@@ -26,7 +26,45 @@ export class RecordUpsertForm {
     this.app = app
     this.collection = options.collection
     this.record = options.record ?? null
-    this.data = options.data
+    this.data = this.stripProtectedFields(options.data, this.record)
+  }
+
+  private stripProtectedFields(data: Record<string, any>, existingRecord: PBRecord | null): Record<string, any> {
+    const protectedFields = [
+      'id',
+      'created',
+      'createdAt',
+      'updated',
+      'updatedAt',
+      '_isAdmin',
+      'isAdmin',
+      'role',
+      'verified',
+      'verifiedAt',
+      'lastResetSentAt',
+      'lastLoginAt',
+      'lastVerifiedAt',
+      'mfaEnabled',
+      'mfaSecret',
+    ]
+
+    const sanitized: Record<string, any> = {}
+    for (const [key, value] of Object.entries(data)) {
+      if (!protectedFields.includes(key)) {
+        if (key.startsWith('_') && !['username', 'email'].includes(key)) continue
+        sanitized[key] = value
+      }
+    }
+
+    if (existingRecord && this.collection.isAuth()) {
+      const currentVerified = existingRecord.get('verified')
+      const newVerified = sanitized.verified
+      if (newVerified !== undefined && newVerified !== currentVerified) {
+        sanitized.verified = currentVerified
+      }
+    }
+
+    return sanitized
   }
 
   validate(): ValidationError[] {

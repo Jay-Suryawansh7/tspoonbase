@@ -128,9 +128,12 @@ export async function canAccessRecord(
   record: PBRecord,
   collection: Collection,
   rule: string | null | undefined,
-  requestInfo: RequestInfo
+  requestInfo: RequestInfo,
+  skipAdminBypass = false
 ): Promise<boolean> {
-  if (requestInfo.isAdmin) return true
+  if (!skipAdminBypass && requestInfo.isAdmin) {
+    return true
+  }
 
   if (!rule || rule === '') return false
 

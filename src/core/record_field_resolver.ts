@@ -308,7 +308,8 @@ export class RecordFieldResolver {
 }
 
 export function evaluateRule(rule: string | null | undefined, resolver: RecordFieldResolver): boolean {
-  if (!rule || rule === '') return true
+  if (!rule) return false
+  if (rule === '') return false
   if (rule === '@request.auth.id != ""' && !resolver.resolve('@request.auth.id')) return false
 
   try {
