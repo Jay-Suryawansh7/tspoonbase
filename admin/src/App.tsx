@@ -52,7 +52,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter basename="/_">
+    <BrowserRouter basename="/_/">
       <Layout onLogout={handleLogout} admin={auth.admin}>
         <Routes>
           <Route path="/" element={<Dashboard />} />

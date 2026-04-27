@@ -104,16 +104,12 @@ app.start()`,
 
 function SpoonLogo({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <img 
+      src="/tspoonbase-logo.png" 
+      alt="TspoonBase" 
       className={className}
-    >
-      <rect width="48" height="48" rx="12" fill="#0F9B76" />
-      <ellipse cx="20" cy="22" rx="7" ry="9" fill="white" fillOpacity="0.95" />
-      <rect x="28" y="14" width="5" height="18" rx="2.5" fill="white" fillOpacity="0.95" />
-    </svg>
+      style={{ objectFit: 'contain' }}
+    />
   )
 }
 

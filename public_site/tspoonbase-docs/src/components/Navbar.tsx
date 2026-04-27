@@ -19,16 +19,12 @@ import SearchModal from './SearchModal'
 
 function Logo({ className = '' }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <img 
+      src="/tspoonbase-logo.png" 
+      alt="TspoonBase" 
       className={className}
-    >
-      <rect width="32" height="32" rx="8" fill="#0F9B76" />
-      <ellipse cx="13.5" cy="15" rx="4.5" ry="6" fill="white" fillOpacity="0.95" />
-      <rect x="19" y="9" width="3.5" height="12" rx="1.75" fill="white" fillOpacity="0.95" />
-    </svg>
+      style={{ objectFit: 'contain' }}
+    />
   )
 }
 

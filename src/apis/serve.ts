@@ -39,7 +39,7 @@ export async function serve(app: BaseApp, port: number): Promise<void> {
   server.use(corsMiddleware())
   server.use(express.json({ limit: '50mb' }))
   server.use(express.urlencoded({ extended: true, limit: '50mb' }))
-  server.use(gzipMiddleware())
+  // server.use(gzipMiddleware())
   server.use(rateLimitMiddleware(app))
   server.use(bodyLimitMiddleware())
   server.use(loadAuthToken(app))

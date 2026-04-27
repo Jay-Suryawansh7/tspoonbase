@@ -256,8 +256,8 @@ tspoonbase migrate status`}
             },
             {
               title: 'Create a superuser',
-              body: 'This gives you admin access to the dashboard.',
-              code: 'tspoonbase superuser-create',
+              body: 'Visit the Admin UI at http://localhost:8090/_/ to create your first admin account directly in the browser. Alternatively, use the CLI:',
+              code: 'tspoonbase superuser-create admin@example.com secret123',
               lang: 'bash' as const,
             },
             {

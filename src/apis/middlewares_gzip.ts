@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import zlib from 'zlib'
+import { Transform } from 'stream'
 
 export function gzipMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -8,33 +9,42 @@ export function gzipMiddleware() {
       return next()
     }
 
-    const originalWrite = res.write.bind(res)
-    const originalEnd = res.end.bind(res)
-
     const gzip = zlib.createGzip()
-
+    
     res.setHeader('Content-Encoding', 'gzip')
     res.setHeader('Vary', 'Accept-Encoding')
 
-    gzip.pipe({
-      write: (chunk: any, encoding: any, cb: any) => {
-        originalWrite(chunk, encoding as any)
-        cb()
-      },
-      end: (cb: any) => {
-        originalEnd(cb)
-      },
-    } as any)
+    gzip.on('data', (chunk: Buffer) => {
+      if (!res.writableEnded) {
+        res.write(chunk)
+      }
+    })
 
-    res.write = (chunk: any, ...args: any[]) => {
-      gzip.write(chunk, args[0], args[1])
+    gzip.on('end', () => {
+      if (!res.writableEnded) {
+        res.end()
+      }
+    })
+
+    gzip.on('error', (err) => {
+      console.error('Gzip error:', err)
+      if (!res.writableEnded) {
+        res.end()
+      }
+    })
+
+    const originalWrite = res.write.bind(res)
+    res.write = (chunk: any, encoding?: any): boolean => {
+      if (!res.writableEnded) {
+        gzip.write(chunk, encoding)
+      }
       return true
     }
 
-    res.end = (chunk: any, ...args: any[]) => {
-      if (chunk) gzip.write(chunk)
+    const originalEnd = res.end.bind(res)
+    res.end = (chunk?: any, encoding?: any): Response => {
+      if (chunk) gzip.write(chunk, encoding)
       gzip.end()
-      if (args[0]) args[0]()
       return res
     }
 

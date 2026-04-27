@@ -65,12 +65,14 @@ npm install -g tspoonbase
 
 # Start the server
 tspoonbase serve --dev --port 8090
-
-# Create a superuser
-tspoonbase superuser-create admin@example.com secret123
 ```
 
-Open http://localhost:8090/_/ for the Admin UI.
+Open http://localhost:8090/_/ for the Admin UI. On first access, create your admin account directly in the browser.
+Alternatively, create a superuser programmatically:
+
+```bash
+tspoonbase superuser-create admin@example.com secret123
+```
 
 ### Programmatic Usage
 
@@ -205,9 +207,16 @@ tspoonbase migrate status
 
 ## Admin UI
 
-After starting the server, visit `http://localhost:8090/_/ `.
+After starting the server, visit `http://localhost:8090/_/`.
 
-Build the admin UI manually:
+On first access, you'll be prompted to create your first admin account directly in the browser:
+
+1. Enter your email and password (min. 6 characters)
+2. Click "Create Admin Account"
+3. You'll be automatically logged in to the dashboard
+
+The admin UI is built with React + Vite. To build it manually:
+
 ```bash
 cd admin
 npm install
