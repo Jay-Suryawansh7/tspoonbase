@@ -22,13 +22,22 @@ const navItems = [
 
 export default function Layout({ children, onLogout, admin }: LayoutProps) {
   const location = useLocation()
+  const currentPage = navItems.find(n => n.path === location.pathname)
 
   return (
     <div className="admin-layout">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <h2>TspoonBase</h2>
+          <img
+            src="/tspoonbase-logo.png"
+            alt="TspoonBase"
+            style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'contain' }}
+          />
+          <span className="logo-text">
+            Tspoon<span className="base">Base</span>
+          </span>
         </div>
+
         <nav className="sidebar-nav">
           {navItems.map(item => (
             <Link
@@ -36,22 +45,37 @@ export default function Layout({ children, onLogout, admin }: LayoutProps) {
               to={item.path}
               className={location.pathname === item.path ? 'active' : ''}
             >
-              <item.icon size={18} />
+              <item.icon size={17} />
               {item.label}
             </Link>
           ))}
         </nav>
+
         <div className="sidebar-footer">
-          <div>{admin?.email || 'Admin'}</div>
-          <button onClick={onLogout} className="btn btn-secondary" style={{ marginTop: 8, width: '100%' }}>
-            <LogOut size={14} /> Logout
+          <div className="sidebar-user">
+            <div className="sidebar-user-avatar">
+              {(admin?.email || 'A').charAt(0).toUpperCase()}
+            </div>
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">
+                {admin?.email?.split('@')[0] || 'Admin'}
+              </div>
+              <div className="sidebar-user-email">
+                {admin?.email || ''}
+              </div>
+            </div>
+          </div>
+          <button onClick={onLogout} className="btn btn-ghost btn-sm" style={{ width: '100%' }}>
+            <LogOut size={14} />
+            Sign Out
           </button>
         </div>
       </aside>
+
       <div className="main-content">
         <header className="top-bar">
-          <div style={{ fontSize: 14, color: '#666' }}>
-            {navItems.find(n => n.path === location.pathname)?.label || 'Admin'}
+          <div className="top-bar-title">
+            {currentPage?.label || 'Admin'}
           </div>
         </header>
         <main className="page-content">

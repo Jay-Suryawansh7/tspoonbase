@@ -2,10 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { api } from '../api/client'
 import { Send, Bot, User, Sparkles } from 'lucide-react'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-}
+interface Message { role: 'user' | 'assistant'; content: string }
 
 export default function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
@@ -15,106 +12,57 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   async function sendMessage(e?: React.FormEvent) {
     e?.preventDefault()
     if (!input.trim() || loading) return
-
     const userMessage = input.trim()
     setInput('')
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setLoading(true)
-
     try {
       const data = await api.post('/api/ai/chat', { message: userMessage })
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply || 'No response' }])
-    } catch (err: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
-    } finally {
-      setLoading(false)
-    }
+    } catch (err: any) { setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }]) }
+    finally { setLoading(false) }
   }
 
-  function quickAction(text: string) {
-    setInput(text)
-  }
+  function quickAction(text: string) { setInput(text) }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)' }}>
+    <div className="chat-container">
       <h2 style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Sparkles size={20} /> AI Assistant
+        <Sparkles size={18} style={{ color: 'var(--blue-bright)' }} /> AI Assistant
       </h2>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div className="quick-actions">
         {['Generate a blog collection', 'Write owner-only update rule', 'Seed 10 test users'].map(text => (
-          <button key={text} className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => quickAction(text)}>
-            {text}
-          </button>
+          <button key={text} className="btn btn-ghost btn-sm" onClick={() => quickAction(text)}>{text}</button>
         ))}
       </div>
 
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        background: 'white',
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-        padding: 20,
-        marginBottom: 12,
-      }}>
+      <div className="chat-messages">
         {messages.map((msg, i) => (
-          <div key={i} style={{
-            display: 'flex',
-            gap: 12,
-            marginBottom: 16,
-            flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-          }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              background: msg.role === 'user' ? '#0066cc' : '#e8f5e9',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              {msg.role === 'user' ? <User size={16} color="white" /> : <Bot size={16} color="#2e7d32" />}
+          <div key={i} className={`chat-bubble ${msg.role}`}>
+            <div className={`chat-avatar ${msg.role}`}>
+              {msg.role === 'user' ? <User size={15} color="#fff" /> : <Bot size={15} />}
             </div>
-            <div style={{
-              maxWidth: '70%',
-              padding: 12,
-              borderRadius: 12,
-              background: msg.role === 'user' ? '#0066cc' : '#f5f5f5',
-              color: msg.role === 'user' ? 'white' : '#333',
-              fontSize: 14,
-              lineHeight: 1.5,
-              whiteSpace: 'pre-wrap',
-            }}>
-              {msg.content}
-            </div>
+            <div className={`chat-content ${msg.role}`}>{msg.content}</div>
           </div>
         ))}
         {loading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#666', fontSize: 14 }}>
-            <div className="spinner" /> Thinking...
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13, padding: 12 }}>
+            <span className="spinner" /> Thinking...
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={sendMessage} style={{ display: 'flex', gap: 8 }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Ask me anything..."
-          style={{ flex: 1, padding: '12px 16px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}
-        />
+      <form onSubmit={sendMessage} className="chat-input-row">
+        <input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask me anything..." />
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          <Send size={16} />
+          <Send size={15} />
         </button>
       </form>
     </div>

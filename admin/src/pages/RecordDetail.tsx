@@ -11,9 +11,7 @@ export default function RecordDetail() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    loadData()
-  }, [collectionId, recordId])
+  useEffect(() => { loadData() }, [collectionId, recordId])
 
   async function loadData() {
     try {
@@ -21,37 +19,29 @@ export default function RecordDetail() {
         api.get(`/api/collections/${collectionId}`),
         api.get(`/api/collections/${collectionId}/records/${recordId}`),
       ])
-      setCollection(col)
-      setRecord(rec)
-    } catch (err: any) {
-      console.error('Failed to load record', err)
-    } finally {
-      setLoading(false)
-    }
+      setCollection(col); setRecord(rec)
+    } catch (err: any) { console.error('Failed to load record', err) }
+    finally { setLoading(false) }
   }
 
   async function saveRecord(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
+    e.preventDefault(); setSaving(true)
     try {
       await api.patch(`/api/collections/${collectionId}/records/${recordId}`, record)
       alert('Record saved')
-    } catch (err: any) {
-      alert(err.message)
-    } finally {
-      setSaving(false)
-    }
+    } catch (err: any) { alert(err.message) }
+    finally { setSaving(false) }
   }
 
-  if (loading) return <div className="empty-state">Loading...</div>
+  if (loading) return <div className="empty-state"><div className="spinner" /></div>
   if (!record) return <div className="empty-state">Record not found</div>
 
   return (
     <div>
-      <button className="btn btn-secondary" onClick={() => navigate(`/records/${collectionId}`)} style={{ marginBottom: 16 }}>
-        <ArrowLeft size={16} /> Back
+      <button className="btn btn-ghost" onClick={() => navigate(`/records/${collectionId}`)} style={{ marginBottom: 16 }}>
+        <ArrowLeft size={15} /> Back to Records
       </button>
-      <h2 style={{ marginBottom: 20 }}>Edit Record</h2>
+      <h2 style={{ marginBottom: 24 }}>Edit Record — {collection?.name}</h2>
 
       <form onSubmit={saveRecord}>
         <div className="card">
@@ -71,7 +61,7 @@ export default function RecordDetail() {
           ))}
         </div>
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Record'}
+          {saving ? <><span className="spinner" /> Saving...</> : 'Save Record'}
         </button>
       </form>
     </div>
