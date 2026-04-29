@@ -49,6 +49,19 @@ coverage/
 # Graphify output
 graphify-out/
 
-# Documentation site
+# PocketBase binary
+pocketbase
+
+# Duplicate/outdated public assets
+public_site/public/
+
+# Empty / leftover dirs
+uploads/
+ui/
+
+# Test scripts
+test1.sh
+test_*/
+*.sh
 
 .gstack/
