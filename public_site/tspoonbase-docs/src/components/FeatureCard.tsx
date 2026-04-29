@@ -15,11 +15,11 @@ export default function FeatureCard({ icon: Icon, title, description, index }: F
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
-      className="group relative overflow-hidden rounded-xl border border-theme bg-theme-surface p-6 transition-colors hover:border-primary/20"
+      className="group relative overflow-hidden rounded-xl border border-theme bg-theme-surface p-6 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       <div className="relative">
-        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <div className="feature-icon-box mb-4">
           <Icon className="h-5 w-5" />
         </div>
         <h3 className="mb-2 font-heading text-base font-semibold text-theme">

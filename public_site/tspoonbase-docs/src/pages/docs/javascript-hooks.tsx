@@ -32,9 +32,9 @@ export default function Hooks() {
     I --> L
     J --> L
     K --> L
-    style D fill:#0F9B76,color:#fff
-    style H fill:#0F9B76,color:#fff
-    style I fill:#0F9B76,color:#fff`}
+    style D fill:#1a6fff,color:#fff
+    style H fill:#1a6fff,color:#fff
+    style I fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="available-hook-events" title="Available Hook Events">
@@ -110,8 +110,8 @@ export default function Hooks() {
     G --> I[Hook Execution]
     H --> I
     I --> J[Return Result]
-    style B fill:#0F9B76,color:#fff
-    style I fill:#0F9B76,color:#fff`}
+    style B fill:#1a6fff,color:#fff
+    style I fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="examples" title="Examples">

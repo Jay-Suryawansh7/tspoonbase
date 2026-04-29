@@ -237,8 +237,8 @@ export default function Configuration() {
     G --> P
     G --> Q
     I --> J
-    style D fill:#0F9B76,color:#fff
-    style N fill:#0F9B76,color:#fff`}
+    style D fill:#1a6fff,color:#fff
+    style N fill:#1a6fff,color:#fff`}
         />
         <p className="mt-4 text-sm text-theme-tertiary">
           The <code className="text-primary">core/</code> directory contains the heart of the system:
@@ -312,8 +312,8 @@ export default function Configuration() {
     C --> D[Environment Variables]
     D --> E[CLI Flags]
     E --> F[Runtime API]
-    style A fill:#0F9B76,color:#fff
-    style F fill:#0F9B76,color:#fff`}
+    style A fill:#1a6fff,color:#fff
+    style F fill:#1a6fff,color:#fff`}
         />
 
         <p className="mt-4 text-sm text-theme-tertiary">

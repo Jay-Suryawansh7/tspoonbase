@@ -83,7 +83,7 @@ export default function APIReference() {
     H --> J[Return JSON Response]
     F --> K[Return Error JSON]
     I --> K
-    style H fill:#0F9B76,color:#fff
+    style H fill:#1a6fff,color:#fff
     style F fill:#ef4444,color:#fff
     style I fill:#ef4444,color:#fff`}
       />
@@ -265,7 +265,7 @@ export default function APIReference() {
     G -->|No| F
     F --> I[Return Error]
     H --> J[Return Results]
-    style H fill:#0F9B76,color:#fff
+    style H fill:#1a6fff,color:#fff
     style F fill:#ef4444,color:#fff`}
       />
 

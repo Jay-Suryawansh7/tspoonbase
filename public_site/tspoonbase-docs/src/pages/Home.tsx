@@ -15,6 +15,10 @@ import {
   Zap,
   Lock,
   Server,
+  Globe,
+  Box,
+  Cpu,
+  Workflow,
 } from 'lucide-react'
 import Terminal from '../components/Terminal'
 import FeatureCard from '../components/FeatureCard'
@@ -54,6 +58,17 @@ const features = [
     title: 'File Storage',
     description: 'Local & S3-compatible with protected file tokens',
   },
+]
+
+const stackIcons = [
+  { name: 'React', icon: Code },
+  { name: 'Next.js', icon: Globe },
+  { name: 'Vue', icon: Cpu },
+  { name: 'Svelte', icon: Workflow },
+  { name: 'Node.js', icon: Server },
+  { name: 'Bun', icon: Zap },
+  { name: 'Docker', icon: Box },
+  { name: 'TypeScript', icon: Code },
 ]
 
 const comparisonRows = [
@@ -127,7 +142,7 @@ function InlineCopy({ text }: { text: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-theme-hover bg-theme-surface px-4 py-2.5 backdrop-blur-sm">
+    <div className="glass-card flex items-center gap-2 px-4 py-2.5">
       <code className="text-sm text-theme-secondary">{text}</code>
       <button
         onClick={handleCopy}
@@ -161,13 +176,12 @@ export default function Home() {
       </Helmet>
 
       <main className="flex-1">
-        {/* HERO */}
+        {/* ==================== HERO ==================== */}
         <section className="relative overflow-hidden pt-28 pb-20 lg:pt-36 lg:pb-28">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-[120px]" />
-          </div>
+          <div className="hero-orb" />
+          <div className="hero-grid pointer-events-none absolute inset-0" />
 
-          {/* Floating decorative elements - Left side */}
+          {/* Floating decorative elements */}
           <div className="pointer-events-none absolute inset-0 hidden lg:block">
             <div className="absolute left-[8%] top-[20%] animate-float-slow">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 backdrop-blur-sm">
@@ -185,13 +199,6 @@ export default function Home() {
             <div className="absolute left-[3%] top-[80%] animate-float-slow">
               <div className="h-8 w-8 rounded-full border border-primary/15 bg-primary/5 backdrop-blur-sm" />
             </div>
-            <div className="absolute left-[15%] top-[35%] animate-float-fast">
-              <div className="h-6 w-6 rotate-12 rounded border border-primary/20 bg-primary/10 backdrop-blur-sm" />
-            </div>
-          </div>
-
-          {/* Floating decorative elements - Right side */}
-          <div className="pointer-events-none absolute inset-0 hidden lg:block">
             <div className="absolute right-[8%] top-[18%] animate-float-medium">
               <div className="flex h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary/10 backdrop-blur-sm">
                 <Zap className="h-7 w-7 text-primary/60" />
@@ -205,9 +212,6 @@ export default function Home() {
                 <Server className="h-6 w-6 text-primary/60" />
               </div>
             </div>
-            <div className="absolute right-[4%] top-[78%] animate-float-medium">
-              <div className="h-8 w-8 rotate-45 rounded-lg border border-primary/15 bg-primary/5 backdrop-blur-sm" />
-            </div>
             <div className="absolute right-[14%] top-[30%] animate-float-slow">
               <div className="h-6 w-6 rounded-full border border-primary/20 bg-primary/10 backdrop-blur-sm" />
             </div>
@@ -220,7 +224,18 @@ export default function Home() {
 
           <div className="relative mx-auto max-w-7xl px-4 lg:px-8">
             <div className="flex flex-col items-center text-center">
-              {/* Logo + Wordmark */}
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="mb-6"
+              >
+                <span className="pill">
+                  <Sparkles className="h-3 w-3" />
+                  Built for Developers
+                </span>
+              </motion.div>
+
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -233,37 +248,36 @@ export default function Home() {
                 </span>
               </motion.div>
 
-              {/* Tagline */}
               <motion.h1
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.15, duration: 0.6 }}
                 className="mb-4 max-w-4xl font-heading text-4xl font-bold leading-tight tracking-tight text-theme sm:text-5xl md:text-6xl"
               >
-                A TypeScript Backend-as-a-Service
-                <span className="text-primary"> in a single package</span>
+                Faster prototypes.
+                <br />
+                <span className="text-primary text-glow">Ship sooner.</span>
               </motion.h1>
 
-              {/* Sub-tagline */}
               <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.25, duration: 0.6 }}
-                className="mb-10 max-w-2xl text-base text-theme-tertiary sm:text-lg"
+                className="mb-8 max-w-2xl text-base text-theme-secondary sm:text-lg"
               >
-                SQLite · Express · WebSocket — Auth, Realtime, File Storage, AI Tools, Vector Search
+                A TypeScript Backend-as-a-Service in a single package.
+                SQLite, Express, WebSocket — Auth, Realtime, File Storage, AI Tools, Vector Search.
               </motion.p>
 
-              {/* CTAs */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.35, duration: 0.6 }}
-                className="mb-6 flex flex-wrap items-center justify-center gap-4"
+                className="mb-8 flex flex-wrap items-center justify-center gap-4"
               >
                 <Link
                   to="/docs/getting-started/quick-start"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-7 py-3 text-sm font-semibold text-theme shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:brightness-110"
+                  className="btn-primary"
                 >
                   Get Started
                   <ArrowRight className="h-4 w-4" />
@@ -272,14 +286,13 @@ export default function Home() {
                   href="https://github.com/Jay-Suryawansh7/tspoonbase"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg border border-theme-hover bg-theme-surface px-7 py-3 text-sm font-semibold text-theme backdrop-blur-sm transition-colors hover:bg-theme-muted"
+                  className="btn-github"
                 >
                   <Code className="h-4 w-4" />
                   View on GitHub
                 </a>
               </motion.div>
 
-              {/* Inline install command */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -289,7 +302,6 @@ export default function Home() {
                 <InlineCopy text="npm install -g tspoonbase" />
               </motion.div>
 
-              {/* Terminal */}
               <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -315,8 +327,107 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FEATURE GRID */}
+        {/* ==================== FEATURE SHOWCASE ==================== */}
+        <section className="border-t border-theme py-20">
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+              {/* Left: Code Editor */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <CodeBlock
+                  code={`import { TspoonBase } from 'tspoonbase'
+
+const app = new TspoonBase({
+  defaultDev: true,
+})
+
+// Auth, realtime, file storage, AI —
+// all built-in, all type-safe
+await app.start(8090)`}
+                  lang="typescript"
+                  filename="server.ts"
+                />
+              </motion.div>
+
+              {/* Right: Feature bullets */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <span className="pill mb-4">Why TspoonBase</span>
+                <h2 className="mb-6 font-heading text-3xl font-bold text-theme">
+                  Everything in one <span className="text-primary">import</span>
+                </h2>
+                <p className="mb-8 text-theme-secondary">
+                  Batteries-included backend with auth, storage, AI, and realtime — no assembly required.
+                </p>
+                <div className="space-y-6">
+                  {[
+                    { icon: Zap, title: 'Zero config', desc: 'Start with one command. No Docker, no YAML.' },
+                    { icon: Shield, title: 'Type-safe API', desc: 'Full TypeScript end-to-end. Zod validation.' },
+                    { icon: Radio, title: 'Realtime by default', desc: 'SSE + WebSocket. Subscribe to any collection.' },
+                    { icon: Sparkles, title: 'AI built-in', desc: 'Schema generator, rule generator, data seeder.' },
+                  ].map((item) => (
+                    <div key={item.title} className="flex gap-4">
+                      <div className="feature-icon-box shrink-0">
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-heading font-semibold text-theme">{item.title}</h4>
+                        <p className="text-sm text-theme-secondary">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================== STACK COMPATIBILITY ==================== */}
         <section className="border-t border-theme bg-theme-surface/30 py-20">
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mb-10 text-center"
+            >
+              <span className="pill mb-4">Works with your stack</span>
+              <h2 className="mb-3 font-heading text-3xl font-bold text-theme">
+                Bring your own frontend
+              </h2>
+              <p className="mx-auto max-w-xl text-theme-secondary">
+                TspoonBase is framework-agnostic. Works with any frontend, any deployment.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-wrap justify-center gap-4"
+            >
+              {stackIcons.map((tech) => (
+                <div key={tech.name} className="tech-badge">
+                  <tech.icon className="mr-2 h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-theme-secondary">{tech.name}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ==================== FEATURE GRID ==================== */}
+        <section className="border-t border-theme py-20">
           <div className="mx-auto max-w-7xl px-4 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -328,7 +439,7 @@ export default function Home() {
               <h2 className="mb-3 font-heading text-3xl font-bold text-theme">
                 Everything you need
               </h2>
-              <p className="mx-auto max-w-xl text-theme-tertiary">
+              <p className="mx-auto max-w-xl text-theme-secondary">
                 Batteries-included backend with auth, storage, AI, and realtime — no assembly required.
               </p>
             </motion.div>
@@ -347,8 +458,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* QUICK INSTALL */}
-        <section className="border-t border-theme py-20">
+        {/* ==================== QUICK INSTALL ==================== */}
+        <section className="border-t border-theme bg-theme-surface/30 py-20">
           <div className="mx-auto max-w-4xl px-4 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -360,7 +471,7 @@ export default function Home() {
               <h2 className="mb-3 font-heading text-3xl font-bold text-theme">
                 Quick Install
               </h2>
-              <p className="mx-auto max-w-xl text-theme-tertiary">
+              <p className="mx-auto max-w-xl text-theme-secondary">
                 Get running in under 60 seconds. Choose your flavor.
               </p>
             </motion.div>
@@ -371,7 +482,6 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              {/* Tabs */}
               <div className="mb-4 flex items-center gap-1 rounded-lg border border-theme bg-theme-surface p-1">
                 {installTabs.map((tab) => (
                   <button
@@ -397,8 +507,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* COMPARISON TABLE */}
-        <section className="border-t border-theme bg-theme-surface/30 py-20">
+        {/* ==================== COMPARISON TABLE ==================== */}
+        <section className="border-t border-theme py-20">
           <div className="mx-auto max-w-4xl px-4 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -410,7 +520,7 @@ export default function Home() {
               <h2 className="mb-3 font-heading text-3xl font-bold text-theme">
                 How we compare
               </h2>
-              <p className="mx-auto max-w-xl text-theme-tertiary">
+              <p className="mx-auto max-w-xl text-theme-secondary">
                 Familiar concepts from PocketBase, reimagined for the TypeScript ecosystem.
               </p>
             </motion.div>
@@ -425,34 +535,24 @@ export default function Home() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-theme bg-theme-surface">
-                    <th className="px-5 py-3.5 font-heading font-semibold text-theme-secondary">
-                      Feature
-                    </th>
-                    <th className="px-5 py-3.5 font-heading font-semibold text-theme-secondary">
-                      Go PocketBase
-                    </th>
-                    <th className="px-5 py-3.5 font-heading font-semibold text-primary">
-                      TspoonBase
-                    </th>
+                    <th className="px-5 py-3.5 font-heading font-semibold text-theme-secondary">Feature</th>
+                    <th className="px-5 py-3.5 font-heading font-semibold text-theme-secondary">Go PocketBase</th>
+                    <th className="px-5 py-3.5 font-heading font-semibold text-primary">TspoonBase</th>
                   </tr>
                 </thead>
                 <tbody>
                   {comparisonRows.map((row, idx) => (
                     <tr
                       key={row.feature}
-                      className={`transition-colors hover:bg-theme-muted ${
+                      className={`transition-colors hover:bg-theme-surface ${
                         idx !== comparisonRows.length - 1 ? 'border-b border-theme' : ''
                       }`}
                     >
-                      <td className="px-5 py-3.5 font-medium text-theme-secondary">
-                        {row.feature}
-                      </td>
+                      <td className="px-5 py-3.5 font-medium text-theme-secondary">{row.feature}</td>
                       <td className="px-5 py-3.5 text-theme-tertiary">
                         {row.pocketbase === '—' ? (
                           <span className="text-theme-muted">—</span>
-                        ) : (
-                          row.pocketbase
-                        )}
+                        ) : row.pocketbase}
                       </td>
                       <td className="px-5 py-3.5 font-medium text-theme-secondary">
                         {row.tspoonbase === '—' ? (
@@ -464,9 +564,7 @@ export default function Home() {
                             </svg>
                             {row.tspoonbase.replace('✓ ', '')}
                           </span>
-                        ) : (
-                          row.tspoonbase
-                        )}
+                        ) : row.tspoonbase}
                       </td>
                     </tr>
                   ))}
@@ -476,8 +574,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ARCHITECTURE DIAGRAM */}
-        <section className="border-t border-theme py-20">
+        {/* ==================== ARCHITECTURE DIAGRAM ==================== */}
+        <section className="border-t border-theme bg-theme-surface/30 py-20">
           <div className="mx-auto max-w-5xl px-4 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -489,7 +587,7 @@ export default function Home() {
               <h2 className="mb-3 font-heading text-3xl font-bold text-theme">
                 Architecture at a glance
               </h2>
-              <p className="mx-auto max-w-xl text-theme-tertiary">
+              <p className="mx-auto max-w-xl text-theme-secondary">
                 One package. One process. Everything wired together.
               </p>
             </motion.div>
@@ -546,9 +644,52 @@ export default function Home() {
     G --> P
     G --> Q
     I --> J
-    style D fill:#0F9B76,color:#fff
-    style N fill:#0F9B76,color:#fff`}
+    style D fill:#1a6fff,color:#fff
+    style N fill:#1a6fff,color:#fff`}
               />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ==================== CTA BANNER ==================== */}
+        <section className="border-t border-theme py-20">
+          <div className="mx-auto max-w-4xl px-4 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative overflow-hidden rounded-3xl border border-theme bg-theme-surface px-8 py-16 text-center"
+            >
+              <div className="hero-orb" style={{ left: '50%', width: '600px', height: '600px' }} />
+              
+              <div className="relative">
+                <SpoonLogo className="mx-auto mb-6 h-16 w-16 animate-pulseGlow" />
+                <h2 className="mb-4 font-heading text-3xl font-bold text-theme sm:text-4xl">
+                  Start building <span className="text-primary">today</span>
+                </h2>
+                <p className="mx-auto mb-8 max-w-lg text-theme-secondary">
+                  One install. One process. Everything you need to ship your next project.
+                </p>
+                <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                  <Link
+                    to="/docs/getting-started/quick-start"
+                    className="btn-primary"
+                  >
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a
+                    href="https://github.com/Jay-Suryawansh7/tspoonbase"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-github"
+                  >
+                    <Code className="h-4 w-4" />
+                    Star on GitHub
+                  </a>
+                </div>
+              </div>
             </motion.div>
           </div>
         </section>

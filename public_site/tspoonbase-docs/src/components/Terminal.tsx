@@ -47,7 +47,7 @@ export default function Terminal({
   }, [showOutput, visibleLines, outputLines.length, lineDelay])
 
   return (
-    <div className="w-full max-w-2xl overflow-hidden rounded-xl border border-theme-hover bg-theme-body shadow-2xl shadow-black/50">
+    <div className="w-full max-w-2xl overflow-hidden rounded-xl border border-theme bg-theme-body shadow-2xl shadow-black/50">
       <div className="flex items-center gap-2 border-b border-theme px-4 py-3">
         <div className="h-3 w-3 rounded-full bg-[#ff5f56]" />
         <div className="h-3 w-3 rounded-full bg-[#ffbd2e]" />

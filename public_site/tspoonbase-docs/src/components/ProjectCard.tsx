@@ -39,7 +39,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-theme bg-theme-surface transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-theme bg-theme-surface transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
     >
       {/* Cover illustration */}
       <div className="relative h-44 w-full overflow-hidden border-b border-theme bg-theme-muted">

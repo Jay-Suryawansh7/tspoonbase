@@ -66,31 +66,28 @@ export default function Navbar() {
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled || isDocs || isAbout
-            ? 'border-b border-theme bg-theme-body/85 backdrop-blur-xl'
+            ? 'border-b border-theme nav-blur'
             : 'border-b border-transparent bg-transparent'
         }`}
       >
-        {/* Full-width edge-to-edge container */}
         <div className="flex h-14 items-center justify-between px-4 md:px-6">
-          {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5 group shrink-0">
             <Logo className="h-7 w-7 transition-transform group-hover:scale-105" />
-            <span className="font-heading text-base font-semibold tracking-tight text-theme">
+            <span className="font-heading text-base font-bold tracking-tight text-theme">
               TspoonBase
             </span>
-            <span className="hidden rounded-full border border-theme-hover bg-theme-muted px-2 py-0.5 text-[10px] font-medium text-theme-muted sm:inline-block">
+            <span className="hidden rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-[10px] font-medium text-theme-muted sm:inline-block">
               v2.1
             </span>
           </Link>
 
-          {/* Center: Desktop Nav links */}
           <nav className="hidden items-center gap-1 md:flex">
             <Link
               to="/docs/getting-started/quick-start"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                 isDocs
                   ? 'bg-primary/10 text-primary'
-                  : 'text-theme-tertiary hover:bg-theme-muted hover:text-theme-secondary'
+                  : 'text-theme-tertiary hover:bg-theme-surface hover:text-theme-secondary'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -102,7 +99,7 @@ export default function Navbar() {
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                 isProjects
                   ? 'bg-primary/10 text-primary'
-                  : 'text-theme-tertiary hover:bg-theme-muted hover:text-theme-secondary'
+                  : 'text-theme-tertiary hover:bg-theme-surface hover:text-theme-secondary'
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
@@ -114,7 +111,7 @@ export default function Navbar() {
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                 isAbout
                   ? 'bg-primary/10 text-primary'
-                  : 'text-theme-tertiary hover:bg-theme-muted hover:text-theme-secondary'
+                  : 'text-theme-tertiary hover:bg-theme-surface hover:text-theme-secondary'
               }`}
             >
               <User className="h-3.5 w-3.5" />
@@ -122,15 +119,14 @@ export default function Navbar() {
             </Link>
           </nav>
 
-          {/* Right: actions */}
           <div className="hidden items-center gap-1 md:flex shrink-0">
             <button
               onClick={() => setSearchOpen(true)}
-              className="group flex items-center gap-2 rounded-lg border border-theme bg-theme-muted px-3 py-1.5 text-sm text-theme-tertiary transition-all hover:border-theme-hover hover:bg-theme-muted hover:text-theme-secondary"
+              className="group flex items-center gap-2 rounded-lg border border-theme bg-theme-surface px-3 py-1.5 text-sm text-theme-tertiary transition-all hover:border-theme-hover hover:bg-theme-surface hover:text-theme-secondary"
             >
               <Search className="h-3.5 w-3.5" />
               <span className="text-xs">Search</span>
-              <kbd className="ml-1 hidden items-center gap-0.5 rounded border border-theme-hover bg-theme-muted px-1.5 py-0.5 text-[10px] text-theme-muted lg:flex">
+              <kbd className="ml-1 hidden items-center gap-0.5 rounded border border-theme-hover bg-theme-surface px-1.5 py-0.5 text-[10px] text-theme-muted lg:flex">
                 <Command className="h-2.5 w-2.5" />
                 <span>K</span>
               </kbd>
@@ -142,7 +138,7 @@ export default function Navbar() {
               href={import.meta.env.VITE_GITHUB_URL || 'https://github.com/Jay-Suryawansh7/tspoonbase'}
               target="_blank"
               rel="noreferrer"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-theme-tertiary transition-all hover:bg-theme-muted hover:text-theme-secondary"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-theme-tertiary transition-all hover:bg-theme-surface hover:text-theme-secondary"
               aria-label="GitHub"
             >
               <Code className="h-3.5 w-3.5" />
@@ -150,7 +146,7 @@ export default function Navbar() {
 
             <button
               onClick={toggle}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-theme-muted transition-all hover:bg-theme-muted hover:text-theme-secondary"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-theme-muted transition-all hover:bg-theme-surface hover:text-theme-secondary"
               aria-label="Toggle theme"
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -179,9 +175,8 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Mobile button */}
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-theme-tertiary transition-colors hover:bg-theme-muted hover:text-theme md:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-theme-tertiary transition-colors hover:bg-theme-surface hover:text-theme md:hidden"
             onClick={() => {
               if (isDocs) {
                 setDrawerOpen(!drawerOpen)
@@ -198,7 +193,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile dropdown */}
         <AnimatePresence>
           {!isDocs && mobileOpen && (
             <motion.div
@@ -206,25 +200,20 @@ export default function Navbar() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-theme bg-theme-body/95 backdrop-blur-xl md:hidden"
+              className="overflow-hidden border-t border-theme nav-blur md:hidden"
             >
               <div className="space-y-1 px-4 py-3">
                 <button
-                  onClick={() => {
-                    setSearchOpen(true)
-                    setMobileOpen(false)
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-muted hover:text-theme"
+                  onClick={() => { setSearchOpen(true); setMobileOpen(false) }}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
                 >
                   <Search className="h-4 w-4" />
                   Search
-                  <kbd className="ml-auto rounded border border-theme-hover bg-theme-surface px-1.5 py-0.5 text-[10px] text-theme-muted">
-                    ⌘K
-                  </kbd>
+                  <kbd className="ml-auto rounded border border-theme-hover bg-theme-surface px-1.5 py-0.5 text-[10px] text-theme-muted">⌘K</kbd>
                 </button>
                 <Link
                   to="/docs/getting-started/quick-start"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-muted hover:text-theme"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
                   onClick={() => setMobileOpen(false)}
                 >
                   <BookOpen className="h-4 w-4" />
@@ -232,7 +221,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/projects"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-muted hover:text-theme"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
                   onClick={() => setMobileOpen(false)}
                 >
                   <Layers className="h-4 w-4" />
@@ -240,7 +229,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/about"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-muted hover:text-theme"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
                   onClick={() => setMobileOpen(false)}
                 >
                   <User className="h-4 w-4" />
@@ -250,18 +239,15 @@ export default function Navbar() {
                   href={import.meta.env.VITE_GITHUB_URL || 'https://github.com/Jay-Suryawansh7/tspoonbase'}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-muted hover:text-theme"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
                   onClick={() => setMobileOpen(false)}
                 >
                   <Code className="h-4 w-4" />
                   GitHub
                 </a>
                 <button
-                  onClick={() => {
-                    toggle()
-                    setMobileOpen(false)
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-muted hover:text-theme"
+                  onClick={() => { toggle(); setMobileOpen(false) }}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
                 >
                   {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                   {theme === 'dark' ? 'Light mode' : 'Dark mode'}

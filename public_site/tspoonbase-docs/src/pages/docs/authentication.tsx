@@ -31,7 +31,7 @@ export default function Authentication() {
     Issue --> Token[Return Token]
     IsAuth -->|Yes| Token
     Token --> API[Access API]
-    style Issue fill:#0F9B76,color:#fff
+    style Issue fill:#1a6fff,color:#fff
     style Deny fill:#ef4444,color:#fff`}
       />
 

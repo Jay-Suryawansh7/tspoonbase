@@ -166,7 +166,7 @@ export default function About() {
         <section className="relative overflow-hidden border-b border-theme">
           <div className="absolute inset-0 opacity-[0.03]">
             <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary blur-3xl" />
-            <div className="absolute -left-20 top-40 h-64 w-64 rounded-full bg-accent blur-3xl" />
+            <div className="absolute -left-20 top-40 h-64 w-64 rounded-full bg-brand-cyan blur-3xl" />
           </div>
 
           <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
@@ -178,7 +178,7 @@ export default function About() {
                 transition={{ duration: 0.5 }}
                 className="shrink-0"
               >
-                <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-4xl font-bold text-white shadow-xl ring-4 ring-theme-body">
+                <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-primary to-brand-cyan text-4xl font-bold text-white shadow-xl ring-4 ring-theme-body">
                   JS
                 </div>
               </motion.div>
@@ -409,7 +409,7 @@ export default function About() {
                   href="https://github.com/Jay-Suryawansh7"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90"
+                  className="                  inline-flex items-center gap-2 rounded-xl btn-primary px-6 py-2.5 text-sm font-medium"
                 >
                   <IconGithub className="h-4 w-4" />
                   Follow on GitHub

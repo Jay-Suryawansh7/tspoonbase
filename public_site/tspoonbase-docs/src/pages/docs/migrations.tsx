@@ -28,7 +28,7 @@ export default function Migrations() {
     H --> I[Run down Functions]
     I --> J[Revert Migration Log]
     J --> K[Schema Sync]
-    style C fill:#0F9B76,color:#fff
+    style C fill:#1a6fff,color:#fff
     style I fill:#f59e0b,color:#fff`}
       />
 
@@ -101,8 +101,8 @@ export default function Migrations() {
     E --> F[Pending List]
     F --> G[Run up]
     G --> H[Update Table]
-    style G fill:#0F9B76,color:#fff
-    style H fill:#0F9B76,color:#fff`}
+    style G fill:#1a6fff,color:#fff
+    style H fill:#1a6fff,color:#fff`}
         />
 
         <h3 className="mb-2 mt-6 font-heading text-sm font-semibold text-theme-secondary">2. CLI</h3>
@@ -144,8 +144,8 @@ console.log(status)`} />
       D --> E[down: Revert ALTER]
       B --> F[down: DROP TABLE]
     end
-    style B fill:#0F9B76,color:#fff
-    style D fill:#0F9B76,color:#fff
+    style B fill:#1a6fff,color:#fff
+    style D fill:#1a6fff,color:#fff
     style E fill:#f59e0b,color:#fff
     style F fill:#f59e0b,color:#fff`}
       />

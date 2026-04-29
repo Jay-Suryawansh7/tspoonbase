@@ -32,7 +32,7 @@ export default function FileStorage() {
     M --> N[Serve File]
     L -->|No| N
     style C fill:#ef4444,color:#fff
-    style N fill:#0F9B76,color:#fff`}
+    style N fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="upload" title="Upload">
@@ -127,8 +127,8 @@ GET /api/files/:collection/:recordId/:filename?download=1`} />
     F --> G[Generate Thumbnail]
     G --> H[Save to Cache]
     H --> E
-    style F fill:#0F9B76,color:#fff
-    style E fill:#0F9B76,color:#fff`}
+    style F fill:#1a6fff,color:#fff
+    style E fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="thumbnail-generation" title="Thumbnail Generation">

@@ -144,9 +144,9 @@ export default function GettingStarted() {
     D --> D1[onBootstrap.js]
     D --> D2[onRecordCreate.js]
     E --> E1[server.ts]
-    style A fill:#0F9B76,color:#fff
-    style B fill:#0F9B76,color:#fff
-    style C fill:#0F9B76,color:#fff`}
+    style A fill:#1a6fff,color:#fff
+    style B fill:#1a6fff,color:#fff
+    style C fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="cli-commands" title="CLI Commands">
@@ -236,8 +236,8 @@ tspoonbase migrate status`}
     D --> E[Open Admin UI]
     E --> F[Define Collections]
     F --> G[Build Frontend]
-    style A fill:#0F9B76,color:#fff
-    style G fill:#0F9B76,color:#fff`}
+    style A fill:#1a6fff,color:#fff
+    style G fill:#1a6fff,color:#fff`}
         />
 
         <ol className="space-y-6">

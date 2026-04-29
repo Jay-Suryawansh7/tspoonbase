@@ -117,7 +117,7 @@ es.onerror = (e) => {
     E -->|users| H[Client C]
     F -.-> I[Update UI]
     G -.-> I
-    style B fill:#0F9B76,color:#fff`}
+    style B fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="subscription-channels" title="Subscription Channels">

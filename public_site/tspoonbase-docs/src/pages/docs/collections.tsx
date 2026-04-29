@@ -32,8 +32,8 @@ export default function Collections() {
     L --> N
     M --> N
     N --> O[Realtime Broadcast]
-    style A fill:#0F9B76,color:#fff
-    style O fill:#0F9B76,color:#fff`}
+    style A fill:#1a6fff,color:#fff
+    style O fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="collection-types" title="Collection Types">
@@ -136,7 +136,7 @@ export default function Collections() {
     F -->|True| G[Allow Operation]
     F -->|False| H[Deny 403]
     G --> I[Execute Handler]
-    style G fill:#0F9B76,color:#fff
+    style G fill:#1a6fff,color:#fff
     style H fill:#ef4444,color:#fff`}
         />
 

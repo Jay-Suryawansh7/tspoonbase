@@ -22,8 +22,8 @@ export default function VectorSearch() {
     F --> G[Vector Search]
     D --> G
     G --> H[Top-K Results]
-    style B fill:#0F9B76,color:#fff
-    style G fill:#0F9B76,color:#fff`}
+    style B fill:#1a6fff,color:#fff
+    style G fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="setup" title="Setup">
@@ -71,8 +71,8 @@ export default function VectorSearch() {
     G -->|No| I[Filter Out]
     H --> J[Sort by Score]
     J --> K[Return Top-K]
-    style E fill:#0F9B76,color:#fff
-    style K fill:#0F9B76,color:#fff`}
+    style E fill:#1a6fff,color:#fff
+    style K fill:#1a6fff,color:#fff`}
       />
 
       <DocSection id="search-api" title="Search API">

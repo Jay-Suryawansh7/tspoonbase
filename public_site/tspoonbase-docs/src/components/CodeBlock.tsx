@@ -111,7 +111,7 @@ export default function CodeBlock({
   const langLabel = langLabelMap[lang] ?? lang
 
   return (
-    <div className="my-6 overflow-hidden rounded-xl border border-theme bg-theme-surface">
+    <div className="my-6 overflow-hidden rounded-xl border border-theme bg-theme-surface terminal-accent">
       {/* Top bar */}
       <div className="flex items-center justify-between border-b border-theme bg-theme-surface px-4 py-2">
         <div className="flex items-center gap-3">
@@ -210,7 +210,7 @@ export default function CodeBlock({
           border-radius: 0.25rem;
         }
         .code-row-highlighted {
-          background-color: rgba(15, 155, 118, 0.08);
+          background-color: rgba(26, 111, 255, 0.08);
         }
         .code-line-number {
           display: inline-block;
