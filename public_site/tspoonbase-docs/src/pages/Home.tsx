@@ -659,11 +659,9 @@ await app.start(8090)`}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="relative overflow-hidden rounded-3xl border border-theme bg-theme-surface px-8 py-16 text-center"
+              className="rounded-3xl border border-theme bg-theme-surface px-8 py-16 text-center"
             >
-              <div className="hero-orb" style={{ left: '50%', width: '600px', height: '600px' }} />
-              
-              <div className="relative">
+              <div>
                 <SpoonLogo className="mx-auto mb-6 h-16 w-16 animate-pulseGlow" />
                 <h2 className="mb-4 font-heading text-3xl font-bold text-theme sm:text-4xl">
                   Start building <span className="text-primary">today</span>

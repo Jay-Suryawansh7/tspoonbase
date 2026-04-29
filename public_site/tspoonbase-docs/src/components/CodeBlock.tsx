@@ -175,7 +175,8 @@ export default function CodeBlock({
           </div>
         ) : (
           <div
-            className="code-block-content px-4 py-4 text-sm font-mono leading-relaxed"
+            className="code-block-content px-5 py-4 text-sm font-mono leading-relaxed"
+            style={{ background: '#0a0f1a', color: '#E5E9F0' }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         )}
@@ -201,6 +202,12 @@ export default function CodeBlock({
         .code-block-content .line {
           display: contents !important;
         }
+        .code-block-content pre.shiki {
+          background: transparent !important;
+        }
+        .code-block-content .shiki .line {
+          display: inline;
+        }
         .code-row {
           display: flex;
           align-items: flex-start;
@@ -225,6 +232,17 @@ export default function CodeBlock({
         .code-line-content {
           flex: 1;
           min-width: 0;
+        }
+        .code-line-content .shiki,
+        .code-line-content pre {
+          all: inherit;
+          display: inline !important;
+        }
+        .code-block-content code :is(.shiki, .github-dark-dimmed) .line {
+          display: inline;
+        }
+        .code-block-content .code-row .code-line-content span {
+          font-family: "JetBrains Mono", ui-monospace, monospace !important;
         }
       `}</style>
     </div>
