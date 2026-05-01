@@ -37,6 +37,7 @@ export async function serve(app: BaseApp, port: number): Promise<void> {
 
   server.use(helmet({ contentSecurityPolicy: false }))
   server.use(corsMiddleware())
+  server.use(require('morgan')('dev'))
   server.use(express.json({ limit: '50mb' }))
   server.use(express.urlencoded({ extended: true, limit: '50mb' }))
   // server.use(gzipMiddleware())
