@@ -5,6 +5,7 @@ const productLinks = [
   { label: 'Quick Start', href: '/docs/getting-started/quick-start' },
   { label: 'Documentation', href: '/docs' },
   { label: 'Projects', href: '/projects' },
+  { label: 'FAQ', href: '/faq' },
   { label: 'About', href: '/about' },
 ]
 
@@ -137,7 +138,12 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 border-t border-theme pt-8 text-center text-sm text-theme-muted">
-          &copy; {new Date().getFullYear()} TspoonBase. Apache-2.0 License.
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <Link to="/privacy" className="transition-colors hover:text-primary">Privacy Policy</Link>
+            <span className="text-theme-muted/40">·</span>
+            <a href="https://github.com/Jay-Suryawansh7/tspoonbase/blob/main/LICENSE" target="_blank" rel="noreferrer" className="transition-colors hover:text-primary">Apache-2.0 License</a>
+          </div>
+          &copy; {new Date().getFullYear()} TspoonBase.
         </div>
       </div>
     </footer>
