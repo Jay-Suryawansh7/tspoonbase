@@ -12,6 +12,7 @@ import {
   Command,
   Layers,
   HelpCircle,
+  Shield,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useDocsDrawer } from './DocsDrawerContext'
@@ -40,6 +41,7 @@ export default function Navbar() {
   const isProjects = location.pathname.startsWith('/projects')
   const isAbout = location.pathname === '/about'
   const isFaq = location.pathname === '/faq'
+  const isPrivacy = location.pathname === '/privacy'
 
   useEffect(() => {
     function onScroll() {
@@ -130,6 +132,18 @@ export default function Navbar() {
             >
               <HelpCircle className="h-3.5 w-3.5" />
               <span>FAQ</span>
+            </Link>
+
+            <Link
+              to="/privacy"
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                isPrivacy
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-theme-tertiary hover:bg-theme-surface hover:text-theme-secondary'
+              }`}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              <span>Privacy</span>
             </Link>
           </nav>
 
@@ -256,6 +270,14 @@ export default function Navbar() {
                 >
                   <HelpCircle className="h-4 w-4" />
                   FAQ
+                </Link>
+                <Link
+                  to="/privacy"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Shield className="h-4 w-4" />
+                  Privacy
                 </Link>
                 <a
                   href={import.meta.env.VITE_GITHUB_URL || 'https://github.com/Jay-Suryawansh7/tspoonbase'}
