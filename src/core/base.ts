@@ -129,6 +129,14 @@ export class BaseApp {
     this._collectionCache.clear()
   }
 
+  getFilesystem(): any {
+    const { Filesystem } = require('../tools/filesystem/filesystem')
+    return new Filesystem({
+      dataDir: this.dataDir,
+      s3Config: this._settings?.s3,
+    })
+  }
+
   db(): DB {
     if (!this._db) throw new Error('Database not initialized. Call bootstrap() first.')
     return this._db

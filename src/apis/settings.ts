@@ -65,9 +65,17 @@ export function registerSettingsRoutes(app: BaseApp, router: Router): void {
       if (!settings.s3.enabled) {
         return res.status(400).json({ code: 400, message: 'S3 not enabled.' })
       }
-      res.json({ success: true, message: 'S3 connection test not fully implemented yet.' })
+      const fsys = app.getFilesystem()
+      const testKey = `_tspoonbase_test_${Date.now()}`
+      await fsys.putFile(testKey, 'ok')
+      const exists = await fsys.fileExists(testKey)
+      await fsys.deleteFile(testKey)
+      if (!exists) {
+        return res.status(500).json({ code: 500, message: 'S3 write/read test failed.' })
+      }
+      res.json({ success: true, message: 'S3 connection successful.' })
     } catch (err: any) {
-      res.status(500).json({ code: 500, message: err.message })
+      res.status(500).json({ code: 500, message: `S3 connection failed: ${err.message}` })
     }
   })
 

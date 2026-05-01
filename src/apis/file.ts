@@ -7,6 +7,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { createHash } from 'crypto'
+import { Readable } from 'stream'
 
 const ALLOWED_FILE_TYPES = [
   'image/jpeg',
@@ -123,6 +124,7 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'No files uploaded.' })
       }
 
+      const fsys = app.getFilesystem()
       const storageBase = path.join(app.dataDir, 'storage', collection.name, recordId)
       fs.mkdirSync(storageBase, { recursive: true })
 
@@ -134,8 +136,10 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
         const baseName = path.basename(file.originalname, ext)
         const safeName = `${baseName}${ext}`.replace(/[^a-zA-Z0-9._-]/g, '_')
         const destPath = path.join(storageBase, safeName)
+        const storageKey = path.join(collection.name, recordId, safeName)
 
-        fs.copyFileSync(file.path, destPath)
+        const fileContent = fs.readFileSync(file.path)
+        await fsys.putFile(storageKey, fileContent)
         fs.unlinkSync(file.path)
         savedFiles.push(safeName)
 
@@ -211,22 +215,43 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
         }
       }
 
-      let filePath: string
-      if (thumb) {
-        filePath = path.join(app.dataDir, 'storage', collection.name, recordId, `${path.basename(filename, path.extname(filename))}_${thumb}${path.extname(filename)}`)
+      const fsys = app.getFilesystem()
+      const isS3 = app.settings().s3?.enabled
+
+      if (isS3) {
+        const storageKey = thumb
+          ? path.join(collection.name, recordId, `${path.basename(filename, path.extname(filename))}_${thumb}${path.extname(filename)}`)
+          : path.join(collection.name, recordId, filename)
+
+        const exists = await fsys.fileExists(storageKey)
+        if (!exists) {
+          return res.status(404).json({ code: 404, message: 'File not found.' })
+        }
+
+        if (download) {
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+        }
+
+        const stream = await fsys.getFile(storageKey) as Readable
+        stream.pipe(res)
       } else {
-        filePath = path.join(app.dataDir, 'storage', collection.name, recordId, filename)
-      }
+        let filePath: string
+        if (thumb) {
+          filePath = path.join(app.dataDir, 'storage', collection.name, recordId, `${path.basename(filename, path.extname(filename))}_${thumb}${path.extname(filename)}`)
+        } else {
+          filePath = path.join(app.dataDir, 'storage', collection.name, recordId, filename)
+        }
 
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ code: 404, message: 'File not found.' })
-      }
+        if (!fs.existsSync(filePath)) {
+          return res.status(404).json({ code: 404, message: 'File not found.' })
+        }
 
-      if (download) {
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
-      }
+        if (download) {
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+        }
 
-      res.sendFile(path.resolve(filePath))
+        res.sendFile(path.resolve(filePath))
+      }
     } catch (err: any) {
       res.status(500).json({ code: 500, message: err.message })
     }
@@ -247,19 +272,24 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
         return res.status(404).json({ code: 404, message: 'Record not found.' })
       }
 
+      const fsys = app.getFilesystem()
       const storageBase = path.join(app.dataDir, 'storage', collection.name, recordId)
       const filePath = path.join(storageBase, filename)
 
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
       }
+      await fsys.deleteFile(path.join(collection.name, recordId, filename)).catch(() => {})
 
       // Delete associated thumbnails
       const baseName = path.basename(filename, path.extname(filename))
       const ext = path.extname(filename)
-      const thumbs = fs.readdirSync(storageBase).filter(f => f.startsWith(`${baseName}_thumb`))
-      for (const thumb of thumbs) {
-        fs.unlinkSync(path.join(storageBase, thumb))
+      if (fs.existsSync(storageBase)) {
+        const thumbs = fs.readdirSync(storageBase).filter(f => f.startsWith(`${baseName}_thumb`))
+        for (const thumb of thumbs) {
+          fs.unlinkSync(path.join(storageBase, thumb))
+          await fsys.deleteFile(path.join(collection.name, recordId, thumb)).catch(() => {})
+        }
       }
 
       // Update record
