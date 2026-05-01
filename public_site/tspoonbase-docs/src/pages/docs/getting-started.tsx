@@ -381,9 +381,7 @@ export default defineCollection({
             <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">one command</span>
           </div>
           <CodeBlock
-            code={`mkdir -p .claude/skills/tspoonbase \\
-  && curl -o .claude/skills/tspoonbase/SKILL.md \\
-  https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md`}
+            code={`mkdir -p .claude/skills/tspoonbase && curl -fsSL https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md -o .claude/skills/tspoonbase/SKILL.md`}
             lang="bash"
             filename="terminal"
           />
@@ -394,16 +392,19 @@ export default defineCollection({
             {
               name: 'Claude',
               path: '.claude/skills/tspoonbase/SKILL.md',
+              cmd: 'mkdir -p .claude/skills/tspoonbase && curl -fsSL https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md -o .claude/skills/tspoonbase/SKILL.md',
               color: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
             },
             {
               name: 'Codex',
               path: '.agent/skills/tspoonbase/SKILL.md',
+              cmd: 'mkdir -p .agent/skills/tspoonbase && curl -fsSL https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md -o .agent/skills/tspoonbase/SKILL.md',
               color: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
             },
             {
               name: 'Cursor',
               path: '.cursor/rules/tspoonbase.mdc',
+              cmd: 'mkdir -p .cursor/rules && curl -fsSL https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md -o .cursor/rules/tspoonbase.mdc',
               color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
             },
           ].map((agent) => (
@@ -419,6 +420,18 @@ export default defineCollection({
               </code>
             </div>
           ))}
+        </div>
+
+        <div className="mb-6 text-center text-sm text-theme-tertiary">
+          or{' '}
+          <a
+            href="https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md"
+            className="text-primary underline hover:no-underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            download the raw file directly
+          </a>
         </div>
 
         <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
