@@ -340,7 +340,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       }
 
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+      const payload = app.parseJWT(token, app.getJwtSecret())
       if (!payload || payload.type !== 'auth') {
         return res.status(401).json({ code: 401, message: 'Invalid token.' })
       }
@@ -386,7 +386,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       }
 
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+      const payload = app.parseJWT(token, app.getJwtSecret())
       if (!payload || payload.type !== 'auth') {
         return res.status(401).json({ code: 401, message: 'Invalid token.' })
       }
@@ -451,7 +451,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       }
 
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+      const payload = app.parseJWT(token, app.getJwtSecret())
       if (!payload || payload.type !== 'auth') {
         return res.status(401).json({ code: 401, message: 'Invalid token.' })
       }

@@ -200,7 +200,7 @@ export async function findAuthRecordByToken(
   validTypes: string[] = ['auth', 'file', 'verifyEmail', 'changeEmail', 'passwordReset']
 ): Promise<PBRecord | null> {
   try {
-    const secret = app.settings().appName || 'secret'
+    const secret = app.getJwtSecret()
     const payload = app.parseJWT(token, secret)
     if (!payload) return null
 

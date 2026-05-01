@@ -56,7 +56,6 @@ export class JSVM {
 
     const sandbox: any = {
       console,
-      require,
       Buffer,
       setTimeout,
       clearTimeout,

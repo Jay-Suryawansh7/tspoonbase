@@ -41,14 +41,14 @@ const upload = multer({
 function generateFileToken(app: BaseApp, collectionId: string, recordId: string, filename: string): string {
   return app.generateJWT(
     { type: 'file', collectionId, recordId, filename },
-    app.settings().appName || 'secret',
+    app.getJwtSecret(),
     '1h'
   )
 }
 
 function verifyFileToken(app: BaseApp, token: string): { collectionId: string; recordId: string; filename: string } | null {
   try {
-    const payload = app.parseJWT(token, app.settings().appName || 'secret')
+    const payload = app.parseJWT(token, app.getJwtSecret())
     if (!payload || payload.type !== 'file') return null
     return { collectionId: payload.collectionId, recordId: payload.recordId, filename: payload.filename }
   } catch {
@@ -135,8 +135,9 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
         const ext = path.extname(file.originalname)
         const baseName = path.basename(file.originalname, ext)
         const safeName = `${baseName}${ext}`.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const safeCollection = collection.name.replace(/[^a-zA-Z0-9_-]/g, '_')
         const destPath = path.join(storageBase, safeName)
-        const storageKey = path.join(collection.name, recordId, safeName)
+        const storageKey = path.join(safeCollection, recordId, safeName)
 
         const fileContent = fs.readFileSync(file.path)
         await fsys.putFile(storageKey, fileContent)

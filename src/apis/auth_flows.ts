@@ -118,7 +118,7 @@ export function registerVerificationRoutes(app: BaseApp, router: Router): void {
       const record = new PBRecord(collection.id, collection.name, row)
       const token = app.generateJWT(
         { id: record.id, type: 'verifyEmail', collectionId: collection.id },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '2h'
       )
 
@@ -156,7 +156,7 @@ export function registerVerificationRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'Invalid collection.' })
       }
 
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+      const payload = app.parseJWT(token, app.getJwtSecret())
       if (!payload || payload.type !== 'verifyEmail') {
         return res.status(400).json({ code: 400, message: 'Invalid or expired token.' })
       }
@@ -198,7 +198,7 @@ export function registerEmailChangeRoutes(app: BaseApp, router: Router): void {
       }
 
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+      const payload = app.parseJWT(token, app.getJwtSecret())
       if (!payload || payload.type !== 'auth') {
         return res.status(401).json({ code: 401, message: 'Invalid token.' })
       }
@@ -212,7 +212,7 @@ export function registerEmailChangeRoutes(app: BaseApp, router: Router): void {
       const record = new PBRecord(collection.id, collection.name, row)
       const changeToken = app.generateJWT(
         { id: record.id, type: 'changeEmail', collectionId: collection.id, newEmail },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '2h'
       )
 
@@ -247,7 +247,7 @@ export function registerEmailChangeRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'Invalid collection.' })
       }
 
-      const payload = app.parseJWT(token, app.settings().appName || 'secret')
+      const payload = app.parseJWT(token, app.getJwtSecret())
       if (!payload || payload.type !== 'changeEmail') {
         return res.status(400).json({ code: 400, message: 'Invalid or expired token.' })
       }
@@ -296,7 +296,7 @@ export function registerImpersonateRoutes(app: BaseApp, router: Router): void {
       const record = new PBRecord(collection.id, collection.name, row)
       const token = app.generateJWT(
         { id: record.id, type: 'auth', collectionId: collection.id },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '1h'
       )
 

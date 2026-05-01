@@ -372,6 +372,23 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.6.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
+            <h4 className="mt-3 text-sm font-semibold text-green-400">Security</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>JWT secret now reads from <code>JWT_SECRET</code> or <code>TSPOONBASE_JWT_SECRET</code> env var first</li>
+              <li>All auth code now uses <code>app.getJwtSecret()</code> instead of <code>appName</code> fallback</li>
+              <li>Encryption salt is now configurable via <code>TSPOONBASE_ENCRYPTION_KEY</code> env var</li>
+              <li>Removed <code>require</code> from JSVM sandbox to prevent hook escape</li>
+              <li>File upload path traversal sanitization on collection names</li>
+            </ul>
+            <h4 className="mt-3 text-sm font-semibold text-blue-400">Reliability</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>Graceful shutdown on SIGTERM/SIGINT with WAL checkpoint</li>
+              <li>Deep health check now verifies database connectivity</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.5.8</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
             <h4 className="mt-3 text-sm font-semibold text-green-400">Fixed</h4>

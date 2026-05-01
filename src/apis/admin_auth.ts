@@ -30,7 +30,7 @@ export function registerAdminAuthRoutes(app: BaseApp, router: Router): void {
 
       const token = app.generateJWT(
         { id: row.id, type: 'admin' },
-        app.settings().appName || 'secret',
+        app.getJwtSecret(),
         '720h'
       )
 

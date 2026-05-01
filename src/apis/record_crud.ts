@@ -196,7 +196,7 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
       if (collection.isAuth()) {
         const token = app.generateJWT(
           { id: record.id, type: 'auth', collectionId: collection.id },
-          app.settings().appName || 'secret',
+          app.getJwtSecret(),
           '720h'
         )
         res.status(201).json({ token, record: response })

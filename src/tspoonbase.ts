@@ -6,6 +6,7 @@ import { JSVM } from './tools/jsvm/jsvm'
 import { MigrationRunner } from './core/migration'
 import path from 'path'
 import fs from 'fs'
+import { once } from 'events'
 
 export interface TspoonBaseConfig {
   hideStartBanner?: boolean
@@ -37,7 +38,7 @@ export class TspoonBase extends BaseApp {
     }
     super(baseConfig)
     this.hideStartBanner = config.hideStartBanner ?? false
-    this.version = '0.5.8'
+    this.version = '0.6.0'
     this._migrationRunner = undefined
   }
 
@@ -69,7 +70,20 @@ Server started at http://localhost:${port}
       }
     }
 
-    await serve(this, port)
+    const httpServer = await serve(this, port)
+
+    const shutdown = async (signal: string) => {
+      console.log(`\nReceived ${signal}, shutting down gracefully...`)
+      httpServer.close()
+      try { this.db().getDataDB().exec('PRAGMA wal_checkpoint(TRUNCATE)') } catch {}
+      try { this.db().getAuxDB().exec('PRAGMA wal_checkpoint(TRUNCATE)') } catch {}
+      this.db().close()
+      process.exit(0)
+    }
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGHUP', () => shutdown('SIGHUP'))
   }
 
   async migrate(): Promise<void> {

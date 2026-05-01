@@ -29,7 +29,7 @@ import path from 'path'
 import fs from 'fs'
 import { hasSuperuser } from '../cmd/superuser'
 
-export async function serve(app: BaseApp, port: number): Promise<void> {
+export async function serve(app: BaseApp, port: number): Promise<http.Server> {
   // Register built-in OAuth2 providers
   registerBuiltInProviders()
 
@@ -137,4 +137,6 @@ export async function serve(app: BaseApp, port: number): Promise<void> {
       console.log(`Server listening on port ${port}`)
     }
   })
+
+  return httpServer
 }

@@ -559,15 +559,20 @@ export class BaseApp {
   }
 
   getJwtSecret(): string {
+    const envSecret = process.env.JWT_SECRET || process.env.TSPOONBASE_JWT_SECRET
+    if (envSecret) {
+      if (envSecret.length < 32) {
+        this.logger().warn('JWT_SECRET should be at least 32 characters for security!')
+      }
+      return envSecret
+    }
     const secret = this._settings?.jwtSecret
-    if (!secret) {
-      this.logger().warn('JWT_SECRET not configured - using appName. Set jwtSecret in settings for production!')
-      return this._settings?.appName || 'tspoonbase-default-secret'
+    if (secret && secret.length >= 16) {
+      return secret
     }
-    if (secret.length < 32) {
-      this.logger().warn('JWT_SECRET should be at least 32 characters for security!')
-    }
-    return secret
+    const fallback = this._settings?.appName || 'tspoonbase-default-secret'
+    this.logger().warn('JWT_SECRET not configured - using appName. Set JWT_SECRET env var or jwtSecret in Admin UI for production!')
+    return fallback
   }
 
   getJwtSecretSafe(): string {

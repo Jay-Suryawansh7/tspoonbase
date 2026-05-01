@@ -59,7 +59,8 @@ export function generateRandomStringByRegex(pattern: string): string {
 }
 
 export function encrypt(plaintext: string, secret: string): string {
-  const key = scryptSync(secret, 'salt', 32)
+  const salt = process.env.TSPOONBASE_ENCRYPTION_KEY || 'tspoonbase-enc-salt-v1'
+  const key = scryptSync(secret, salt, 32)
   const iv = randomBytes(16)
   const cipher = createCipheriv('aes-256-cbc', key, iv)
   let encrypted = cipher.update(plaintext, 'utf8', 'hex')
@@ -69,7 +70,8 @@ export function encrypt(plaintext: string, secret: string): string {
 
 export function decrypt(ciphertext: string, secret: string): string {
   const [ivHex, encrypted] = ciphertext.split(':')
-  const key = scryptSync(secret, 'salt', 32)
+  const salt = process.env.TSPOONBASE_ENCRYPTION_KEY || 'tspoonbase-enc-salt-v1'
+  const key = scryptSync(secret, salt, 32)
   const iv = Buffer.from(ivHex, 'hex')
   const decipher = createDecipheriv('aes-256-cbc', key, iv)
   let decrypted = decipher.update(encrypted, 'hex', 'utf8')

@@ -25,8 +25,7 @@ export function loadAuthToken(app: BaseApp) {
     }
 
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
-    const secret = app.settings().appName || 'secret'
-    const payload = app.parseJWT(token, secret)
+    const payload = app.parseJWT(token, app.getJwtSecret())
 
     if (!payload) {
       req.authContext = { record: null, isAdmin: false, token: null }
