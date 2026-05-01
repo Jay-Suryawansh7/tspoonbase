@@ -370,39 +370,66 @@ export default defineCollection({
       </DocSection>
 
       <DocSection id="agent-skill" title="Agent Skill">
-        <p className="mb-4 text-theme-secondary">
-          Install the TspoonBase agent skill so any AI coding agent (Claude, Codex, Cursor, etc.)
-          understands TspoonBase and can help you build backends faster.
+        <p className="mb-6 text-theme-secondary">
+          Drop this skill into your AI coding agent and it instantly understands TspoonBase —
+          CLI commands, auth flows, CRUD, realtime, file storage, AI tools, and deployment.
         </p>
 
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <div className="text-sm text-theme-secondary">
-            <strong className="text-theme">One-command install:</strong>{' '}
-            <code className="rounded bg-theme-muted px-1 py-0.5 text-xs text-primary">
-              mkdir -p .claude/skills/tspoonbase && curl -o .claude/skills/tspoonbase/SKILL.md https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md
-            </code>
+        <div className="mb-6 overflow-hidden rounded-xl border border-theme bg-theme-surface">
+          <div className="flex items-center justify-between border-b border-theme px-4 py-2">
+            <span className="text-xs font-medium text-theme-tertiary">INSTALL</span>
+            <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">one command</span>
           </div>
+          <CodeBlock
+            code={`mkdir -p .claude/skills/tspoonbase \\
+  && curl -o .claude/skills/tspoonbase/SKILL.md \\
+  https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md`}
+            lang="bash"
+            filename="terminal"
+          />
         </div>
 
-        <p className="mb-4 text-theme-secondary">
-          The skill covers all TspoonBase features — CLI commands, auth, collections, file storage,
-          realtime, AI tools, vector search, migrations, hooks, backups, deployment, and the SDK.
-          Place it in <code className="rounded bg-theme-muted px-1 py-0.5 text-xs">.claude/skills/tspoonbase/SKILL.md</code> for Claude,
-          or <code className="rounded bg-theme-muted px-1 py-0.5 text-xs">.agents/skills/tspoonbase/SKILL.md</code> for other agents.
-        </p>
+        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              name: 'Claude',
+              path: '.claude/skills/tspoonbase/SKILL.md',
+              color: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+            },
+            {
+              name: 'Codex',
+              path: '.agent/skills/tspoonbase/SKILL.md',
+              color: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+            },
+            {
+              name: 'Cursor',
+              path: '.cursor/rules/tspoonbase.mdc',
+              color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+            },
+          ].map((agent) => (
+            <div
+              key={agent.name}
+              className="rounded-lg border border-theme bg-theme-surface p-4"
+            >
+              <div className={`mb-2 inline-block rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${agent.color}`}>
+                {agent.name}
+              </div>
+              <code className="block break-all text-[11px] leading-relaxed text-theme-tertiary">
+                {agent.path}
+              </code>
+            </div>
+          ))}
+        </div>
 
-        <p className="text-theme-secondary">
-          Raw skill file:{' '}
-          <a
-            href="https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md"
-            className="text-primary underline hover:no-underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            tspoonbase-agent-skill.md
-          </a>
-        </p>
+        <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+          <p className="text-sm text-theme-secondary">
+            <strong className="text-theme">What's included:</strong>{' '}
+            CLI commands, auth (email, OAuth2, OTP, MFA), collections &amp; records,
+            file storage with S3, realtime WebSocket &amp; SSE, AI tools, vector search,
+            migrations, JavaScript hooks, backups, Docker deployment, SDK usage, and
+            environment variables.
+          </p>
+        </div>
       </DocSection>
 
       <DocSection id="changelog" title="Changelog">
