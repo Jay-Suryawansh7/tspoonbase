@@ -165,8 +165,12 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
             res.status(404).json({ code: 404, message: 'Record not found.' })
             return true
           }
-          if (collection.viewRule !== null) {
-            requestInfo.context = 'view'
+          requestInfo.context = 'view'
+          if (collection.viewRule === null) {
+            res.status(404).json({ code: 404, message: 'Record not found.' })
+            return true
+          }
+          if (collection.viewRule !== '') {
             const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
             if (!accessible) {
               res.status(404).json({ code: 404, message: 'Record not found.' })
@@ -187,7 +191,9 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
           const result = await findAllRecords(app, collectionIdOrName, { filter, sort, page, perPage })
           let items = result.items
 
-          if (collection.listRule !== null) {
+          if (collection.listRule === null) {
+            items = []
+          } else if (collection.listRule !== '') {
             const accessible = []
             for (const item of items) {
               if (await canAccessRecord(app, item, collection, collection.listRule, requestInfo)) {
@@ -240,7 +246,11 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
           return true
         }
         requestInfo.context = 'update'
-        if (collection.updateRule !== null) {
+        if (collection.updateRule === null) {
+          res.status(403).json({ code: 403, message: 'Access denied.' })
+          return true
+        }
+        if (collection.updateRule !== '') {
           const accessible = await canAccessRecord(app, record, collection, collection.updateRule, requestInfo)
           if (!accessible) {
             res.status(403).json({ code: 403, message: 'Access denied.' })
@@ -272,7 +282,11 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
           return true
         }
         requestInfo.context = 'delete'
-        if (collection.deleteRule !== null) {
+        if (collection.deleteRule === null) {
+          res.status(403).json({ code: 403, message: 'Access denied.' })
+          return true
+        }
+        if (collection.deleteRule !== '') {
           const accessible = await canAccessRecord(app, record, collection, collection.deleteRule, requestInfo)
           if (!accessible) {
             res.status(403).json({ code: 403, message: 'Access denied.' })

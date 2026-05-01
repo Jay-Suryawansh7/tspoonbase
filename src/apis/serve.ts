@@ -119,6 +119,56 @@ export async function serve(app: BaseApp, port: number): Promise<http.Server> {
 
   await app.onServe.trigger({ app, router: server })
 
+  // Schedule automated backups if configured
+  try {
+    const backupCron = app.settings().backups?.cron
+    const maxKeep = app.settings().backups?.cronMaxKeep ?? 3
+    if (backupCron) {
+      const croner = require('croner')
+      croner(backupCron, async () => {
+        try {
+          const { default: JSZip } = await import('jszip')
+          const backupDir = path.join(app.dataDir, 'backups')
+          fs.mkdirSync(backupDir, { recursive: true })
+          const backupName = `auto_backup_${Date.now()}.zip`
+          const backupPath = path.join(backupDir, backupName)
+
+          const zip = new JSZip()
+          for (const dbFile of ['data.db', 'auxiliary.db']) {
+            const dbPath = path.join(app.dataDir, dbFile)
+            if (fs.existsSync(dbPath)) {
+              zip.file(dbFile, fs.readFileSync(dbPath))
+            }
+          }
+          const storageDir = path.join(app.dataDir, 'storage')
+          if (fs.existsSync(storageDir)) {
+            const walk = (dir: string, prefix: string) => {
+              for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+                const fp = path.join(dir, e.name)
+                if (e.isDirectory()) walk(fp, prefix ? `${prefix}/${e.name}` : e.name)
+                else zip.file(`storage/${prefix ? prefix + '/' : ''}${e.name}`, fs.readFileSync(fp))
+              }
+            }
+            walk(storageDir, '')
+          }
+          const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+          fs.writeFileSync(backupPath, buf)
+
+          // Prune old backups
+          const files = fs.readdirSync(backupDir)
+            .filter(f => f.startsWith('auto_backup_') && f.endsWith('.zip'))
+            .sort()
+          while (files.length > maxKeep) {
+            const old = files.shift()
+            if (old) fs.unlinkSync(path.join(backupDir, old))
+          }
+        } catch (err: any) {
+          app.logger().error('Automated backup failed', err.message)
+        }
+      })
+    }
+  } catch {}
+
   const httpServer = http.createServer(server)
 
   const wss = new WebSocketServer({ noServer: true })

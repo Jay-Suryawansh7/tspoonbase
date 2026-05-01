@@ -386,6 +386,39 @@ export class BaseApp {
     } else if (model instanceof PBRecord) {
       const tableName = `_r_${model.collectionId}`
       db.prepare(`DELETE FROM ${tableName} WHERE id = ?`).run(model.id)
+
+      // Nullify relations pointing to this record
+      const collections = await this.findAllCollections()
+      for (const col of collections) {
+        for (const field of col.fields) {
+          if (field.type === 'relation') {
+            const relField = field as any
+            if (relField.collectionId === model.collectionId) {
+              const refTable = `_r_${col.id}`
+              db.prepare(`UPDATE "${refTable}" SET "${field.name}" = NULL WHERE "${field.name}" = ?`).run(model.id)
+            }
+          }
+        }
+      }
+
+      // Clean up associated files
+      try {
+        const fsys = this.getFilesystem()
+        const col = await this.findCollectionByNameOrId(model.collectionId)
+        if (col) {
+          for (const field of col.fields) {
+            if (field.type === 'file') {
+              const files = model.get(field.name)
+              if (Array.isArray(files)) {
+                for (const f of files) {
+                  const storageKey = `${model.collectionName}/${model.id}/${f}`
+                  await fsys.deleteFile(storageKey).catch(() => {})
+                }
+              }
+            }
+          }
+        }
+      } catch {}
     } else {
       const tableName = model.tableName()
       db.prepare(`DELETE FROM ${tableName} WHERE id = ?`).run(model.id)
@@ -396,6 +429,8 @@ export class BaseApp {
       await this.onRecordAfterDeleteSuccess.triggerForTag(model.collectionId, { app: this, record: model })
     }
   }
+
+
 
   async runSystemMigrations(): Promise<void> {
     if (!this._db) return

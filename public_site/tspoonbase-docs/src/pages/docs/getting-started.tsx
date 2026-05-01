@@ -448,6 +448,21 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.7.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
+            <h4 className="mt-3 text-sm font-semibold text-green-400">Fixed</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>API rules now follow correct semantics: <code>null</code> = blocked, <code>""</code> = public access</li>
+              <li>Record delete now nullifies relation references pointing to the deleted record</li>
+              <li>Record delete now cleans up associated file storage (local + S3)</li>
+            </ul>
+            <h4 className="mt-3 text-sm font-semibold text-blue-400">Added</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>Automated backup cron job via <code>backups.cron</code> setting in Admin UI</li>
+              <li>Auto-prune of old backups via <code>backups.cronMaxKeep</code> setting</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.6.0</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
             <h4 className="mt-3 text-sm font-semibold text-green-400">Security</h4>

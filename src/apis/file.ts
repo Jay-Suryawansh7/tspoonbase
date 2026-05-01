@@ -90,7 +90,10 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
         context: 'view',
       }
 
-      if (collection.viewRule !== null) {
+      if (collection.viewRule === null) {
+        return res.status(403).json({ code: 403, message: 'File access denied.' })
+      }
+      if (collection.viewRule !== '') {
         const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
         if (!accessible) {
           return res.status(403).json({ code: 403, message: 'File access denied.' })
@@ -208,7 +211,10 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
           context: 'view',
         }
 
-        if (collection.viewRule !== null) {
+        if (collection.viewRule === null) {
+          return res.status(404).json({ code: 404, message: 'File not found.' })
+        }
+        if (collection.viewRule !== '') {
           const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
           if (!accessible) {
             return res.status(404).json({ code: 404, message: 'File not found.' })

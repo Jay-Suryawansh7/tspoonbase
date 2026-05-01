@@ -135,7 +135,8 @@ export async function canAccessRecord(
     return true
   }
 
-  if (!rule || rule === '') return false
+  if (rule === '') return true
+  if (!rule) return false
 
   const resolver = new RecordFieldResolver({
     record,
@@ -174,8 +175,8 @@ export async function checkCollectionAccess(
       break
   }
 
-  if (!rule) return false
-  if (rule === '' && action !== 'create') return false
+  if (rule === null) return false
+  if (rule === '') return true
 
   if (!record) return false
 

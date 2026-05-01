@@ -20,9 +20,7 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
 
       const requestInfo = buildRequestInfo(req)
 
-      if (collection.listRule !== null) {
-        requestInfo.context = 'list'
-      }
+      requestInfo.context = 'list'
 
       const page = parseInt(req.query.page as string) || 1
       const perPage = parseInt(req.query.perPage as string) || 30
@@ -42,7 +40,9 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
 
       let items = result.items
 
-      if (collection.listRule !== null) {
+      if (collection.listRule === null) {
+        items = []
+      } else if (collection.listRule !== '') {
         const accessible: PBRecord[] = []
         for (const item of items) {
           if (await canAccessRecord(app, item, collection, collection.listRule, requestInfo)) {
@@ -93,9 +93,10 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
         minSimilarity !== undefined ? parseFloat(minSimilarity) : undefined
       )
 
-      // Apply list access rules if configured
       let accessible = results
-      if (collection.listRule !== null) {
+      if (collection.listRule === null) {
+        accessible = []
+      } else if (collection.listRule !== '') {
         accessible = []
         for (const item of results) {
           if (await canAccessRecord(app, item.record, collection, collection.listRule, requestInfo)) {
@@ -135,9 +136,12 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
       }
 
       const requestInfo = buildRequestInfo(req)
+      requestInfo.context = 'view'
 
-      if (collection.viewRule !== null) {
-        requestInfo.context = 'view'
+      if (collection.viewRule === null) {
+        return res.status(404).json({ code: 404, message: 'Record not found.' })
+      }
+      if (collection.viewRule !== '') {
         const accessible = await canAccessRecord(app, record, collection, collection.viewRule, requestInfo)
         if (!accessible) {
           return res.status(404).json({ code: 404, message: 'Record not found.' })
@@ -167,9 +171,11 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
       }
 
       const requestInfo = buildRequestInfo(req)
+      requestInfo.context = 'create'
 
-      if (collection.createRule !== null) {
-        requestInfo.context = 'create'
+      // Enforce createRule before validation
+      if (collection.createRule === null) {
+        return res.status(403).json({ code: 403, message: 'Access denied.' })
       }
 
       const { record, errors } = await validateAndCreateRecord(app, collection, req.body)
@@ -177,8 +183,7 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'Validation failed.', data: errors })
       }
 
-      // Enforce createRule
-      if (collection.createRule !== null) {
+      if (collection.createRule !== '') {
         const accessible = await canAccessRecord(app, record, collection, collection.createRule, requestInfo)
         if (!accessible) {
           return res.status(403).json({ code: 403, message: 'Access denied.' })
@@ -221,9 +226,12 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
       }
 
       const requestInfo = buildRequestInfo(req)
+      requestInfo.context = 'update'
 
-      if (collection.updateRule !== null) {
-        requestInfo.context = 'update'
+      if (collection.updateRule === null) {
+        return res.status(403).json({ code: 403, message: 'Access denied.' })
+      }
+      if (collection.updateRule !== '') {
         const accessible = await canAccessRecord(app, existingRecord, collection, collection.updateRule, requestInfo)
         if (!accessible) {
           return res.status(403).json({ code: 403, message: 'Access denied.' })
@@ -261,9 +269,12 @@ export function registerRecordCRUDRoutes(app: BaseApp, router: Router): void {
       }
 
       const requestInfo = buildRequestInfo(req)
+      requestInfo.context = 'delete'
 
-      if (collection.deleteRule !== null) {
-        requestInfo.context = 'delete'
+      if (collection.deleteRule === null) {
+        return res.status(403).json({ code: 403, message: 'Access denied.' })
+      }
+      if (collection.deleteRule !== '') {
         const accessible = await canAccessRecord(app, record, collection, collection.deleteRule, requestInfo)
         if (!accessible) {
           return res.status(403).json({ code: 403, message: 'Access denied.' })
