@@ -369,6 +369,42 @@ export default defineCollection({
         </div>
       </DocSection>
 
+      <DocSection id="agent-skill" title="Agent Skill">
+        <p className="mb-4 text-theme-secondary">
+          Install the TspoonBase agent skill so any AI coding agent (Claude, Codex, Cursor, etc.)
+          understands TspoonBase and can help you build backends faster.
+        </p>
+
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="text-sm text-theme-secondary">
+            <strong className="text-theme">One-command install:</strong>{' '}
+            <code className="rounded bg-theme-muted px-1 py-0.5 text-xs text-primary">
+              mkdir -p .claude/skills/tspoonbase && curl -o .claude/skills/tspoonbase/SKILL.md https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md
+            </code>
+          </div>
+        </div>
+
+        <p className="mb-4 text-theme-secondary">
+          The skill covers all TspoonBase features — CLI commands, auth, collections, file storage,
+          realtime, AI tools, vector search, migrations, hooks, backups, deployment, and the SDK.
+          Place it in <code className="rounded bg-theme-muted px-1 py-0.5 text-xs">.claude/skills/tspoonbase/SKILL.md</code> for Claude,
+          or <code className="rounded bg-theme-muted px-1 py-0.5 text-xs">.agents/skills/tspoonbase/SKILL.md</code> for other agents.
+        </p>
+
+        <p className="text-theme-secondary">
+          Raw skill file:{' '}
+          <a
+            href="https://raw.githubusercontent.com/Jay-Suryawansh7/tspoonbase/main/public_site/tspoonbase-agent-skill.md"
+            className="text-primary underline hover:no-underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            tspoonbase-agent-skill.md
+          </a>
+        </p>
+      </DocSection>
+
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">

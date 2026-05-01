@@ -17,6 +17,7 @@ export const navigation: NavItem[] = [
       { id: 'first-steps', label: 'First Steps', path: '/docs/getting-started/first-steps' },
       { id: 'project-structure', label: 'Project Structure', path: '/docs/getting-started/project-structure' },
       { id: 'changelog', label: 'Changelog', path: '/docs/getting-started/changelog' },
+      { id: 'agent-skill', label: 'Agent Skill', path: '/docs/getting-started/agent-skill' },
     ],
   },
   {
