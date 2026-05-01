@@ -311,7 +311,7 @@ export default function Home() {
                 <Terminal
                   command="tspoonbase serve --dev --port 8090"
                   outputLines={[
-                    '▸ Initializing TspoonBase v2.1.0...',
+                    '▸ Initializing TspoonBase v0.7.0...',
                     '✓ SQLite database connected (pb_data/data.db)',
                     '✓ WebSocket server ready',
                     '✓ SSE endpoint mounted',

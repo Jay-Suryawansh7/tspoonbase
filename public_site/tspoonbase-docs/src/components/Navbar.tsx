@@ -83,7 +83,7 @@ export default function Navbar() {
               TspoonBase
             </span>
             <span className="hidden rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-[10px] font-medium text-theme-muted sm:inline-block">
-              v2.1
+              v0.7.0
             </span>
           </Link>
 
