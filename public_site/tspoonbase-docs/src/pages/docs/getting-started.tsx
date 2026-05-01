@@ -372,6 +372,16 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.5.2</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
+            <h4 className="mt-3 text-sm font-semibold text-green-400">Fixed</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>Implemented backup create, restore, and upload endpoints (were non-functional stubs)</li>
+              <li>Backups now include both databases (data.db + auxiliary.db) and storage files in a zip</li>
+              <li>Restore safely checkpoints WAL, replaces files, and re-bootstraps the server</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.5.1</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
             <h4 className="mt-3 text-sm font-semibold text-green-400">Fixed</h4>
