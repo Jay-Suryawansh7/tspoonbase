@@ -16,6 +16,7 @@ export const navigation: NavItem[] = [
       { id: 'cli-commands', label: 'CLI Commands', path: '/docs/getting-started/cli-commands' },
       { id: 'first-steps', label: 'First Steps', path: '/docs/getting-started/first-steps' },
       { id: 'project-structure', label: 'Project Structure', path: '/docs/getting-started/project-structure' },
+      { id: 'changelog', label: 'Changelog', path: '/docs/getting-started/changelog' },
     ],
   },
   {

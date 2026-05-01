@@ -368,6 +368,32 @@ export default defineCollection({
           ))}
         </div>
       </DocSection>
+
+      <DocSection id="changelog" title="Changelog">
+        <div className="space-y-6">
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.5.1</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
+            <h4 className="mt-3 text-sm font-semibold text-green-400">Fixed</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>Removed circular self-dependency (tspoonbase depending on itself in package.json)</li>
+              <li>Synced hardcoded version in src to match package.json</li>
+            </ul>
+          </div>
+
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.5.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-04-29</p>
+            <h4 className="mt-3 text-sm font-semibold text-blue-400">Added</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>FAQ and Privacy Policy pages on docs site and landing page</li>
+              <li>Feedback form page</li>
+              <li>Projects page with project guides</li>
+              <li>Knowledge graph visualizations in documentation</li>
+            </ul>
+          </div>
+        </div>
+      </DocSection>
     </article>
   )
 }
