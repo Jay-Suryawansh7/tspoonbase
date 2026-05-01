@@ -372,6 +372,16 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.5.4</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
+            <h4 className="mt-3 text-sm font-semibold text-blue-400">Added</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>Production Dockerfile with multi-stage build (Node 20 Alpine)</li>
+              <li><code>docker-compose.yml</code> with persistent volume for pb_data</li>
+              <li><code>.dockerignore</code> for optimized builds</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.5.3</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
             <h4 className="mt-3 text-sm font-semibold text-green-400">Added</h4>

@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  tspoonbase:
+    build: .
+    ports:
+      - "8090:8090"
+    volumes:
+      - tspoonbase_data:/app/pb_data
+    environment:
+      - TSPOONBASE_ENCRYPTION_KEY=${TSPOONBASE_ENCRYPTION_KEY:-}
+    restart: unless-stopped
+
+volumes:
+  tspoonbase_data:
