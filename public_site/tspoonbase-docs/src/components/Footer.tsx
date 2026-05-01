@@ -5,6 +5,7 @@ const productLinks = [
   { label: 'Quick Start', href: '/docs/getting-started/quick-start' },
   { label: 'Documentation', href: '/docs' },
   { label: 'Projects', href: '/projects' },
+  { label: 'Feedback', href: '/feedback' },
   { label: 'FAQ', href: '/faq' },
   { label: 'About', href: '/about' },
 ]

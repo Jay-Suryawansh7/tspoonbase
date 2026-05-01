@@ -13,6 +13,7 @@ import {
   Layers,
   HelpCircle,
   Shield,
+  MessageSquareText,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useDocsDrawer } from './DocsDrawerContext'
@@ -42,6 +43,7 @@ export default function Navbar() {
   const isAbout = location.pathname === '/about'
   const isFaq = location.pathname === '/faq'
   const isPrivacy = location.pathname === '/privacy'
+  const isFeedback = location.pathname === '/feedback'
 
   useEffect(() => {
     function onScroll() {
@@ -120,6 +122,18 @@ export default function Navbar() {
             >
               <User className="h-3.5 w-3.5" />
               <span>About</span>
+            </Link>
+
+            <Link
+              to="/feedback"
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                isFeedback
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-theme-tertiary hover:bg-theme-surface hover:text-theme-secondary'
+              }`}
+            >
+              <MessageSquareText className="h-3.5 w-3.5" />
+              <span>Feedback</span>
             </Link>
 
             <Link
@@ -262,6 +276,14 @@ export default function Navbar() {
                 >
                   <User className="h-4 w-4" />
                   About
+                </Link>
+                <Link
+                  to="/feedback"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <MessageSquareText className="h-4 w-4" />
+                  Feedback
                 </Link>
                 <Link
                   to="/faq"
