@@ -98,6 +98,22 @@ code,pre{font-family:var(--font-mono)}
 .footer-bottom-links{display:flex;gap:20px}
 .footer-bottom-links a{color:var(--text-muted);transition:color .15s}
 .footer-bottom-links a:hover{color:var(--text-secondary)}
+.faq-item{border-bottom:1px solid var(--bg-border);padding:0;opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
+.faq-item.visible{opacity:1;transform:translateY(0)}
+.faq-question{display:flex;align-items:center;justify-content:space-between;width:100%;padding:20px 0;font-family:var(--font-body);font-size:16px;font-weight:500;color:var(--text-primary);text-align:left;background:none;border:none;cursor:pointer;transition:color .15s}
+.faq-question:hover{color:var(--blue-bright)}
+.faq-question .icon{width:20px;height:20px;flex-shrink:0;color:var(--text-muted);transition:transform .3s var(--ease-out),color .15s}
+.faq-item.open .faq-question .icon{transform:rotate(180deg);color:var(--blue-bright)}
+.faq-answer{overflow:hidden;max-height:0;transition:max-height .4s var(--ease-out),padding .4s var(--ease-out)}
+.faq-item.open .faq-answer{max-height:300px}
+.faq-answer-inner{padding-bottom:20px;font-size:15px;color:var(--text-secondary);line-height:1.7}
+.privacy-content{max-width:800px;margin:0 auto}
+.privacy-content h3{font-family:var(--font-body);font-weight:600;font-size:18px;margin:24px 0 8px;color:var(--text-primary)}
+.privacy-content p{font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px}
+.privacy-content ul{padding-left:20px;margin-bottom:12px}
+.privacy-content ul li{font-size:15px;color:var(--text-secondary);line-height:1.7;list-style:disc}
+.privacy-content a{color:var(--blue-bright);text-decoration:underline}
+.privacy-content a:hover{color:var(--cyan-spark)}
 @media(max-width:1024px){.footer-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:768px){
 .nav-links{display:none}.nav-actions .btn-primary span{display:none}.nav-hamburger{display:flex}
@@ -119,8 +135,9 @@ code,pre{font-family:var(--font-mono)}
     <a href="#showcase" class="nav-link" style="animation:fadeUp .5s 0s both">Features</a>
     <a href="#features" class="nav-link" style="animation:fadeUp .5s 50ms both">Components</a>
     <a href="#stack" class="nav-link" style="animation:fadeUp .5s 100ms both">Templates</a>
-    <a href="/docs" class="nav-link" style="animation:fadeUp .5s 150ms both">Docs</a>
-    <a href="https://github.com/Jay-Suryawansh7/tspoonbase" target="_blank" class="nav-link" style="animation:fadeUp .5s 200ms both">GitHub</a>
+    <a href="#faq" class="nav-link" style="animation:fadeUp .5s 150ms both">FAQ</a>
+    <a href="/docs" class="nav-link" style="animation:fadeUp .5s 200ms both">Docs</a>
+    <a href="https://github.com/Jay-Suryawansh7/tspoonbase" target="_blank" class="nav-link" style="animation:fadeUp .5s 250ms both">GitHub</a>
   </div>
   <div class="nav-actions">
     <a href="https://github.com/Jay-Suryawansh7/tspoonbase" target="_blank" class="nav-github-btn" style="animation:fadeUp .5s 250ms both">
@@ -134,6 +151,7 @@ code,pre{font-family:var(--font-mono)}
   <a href="#showcase" onclick="closeNav()">Features</a>
   <a href="#features" onclick="closeNav()">Components</a>
   <a href="#stack" onclick="closeNav()">Templates</a>
+  <a href="#faq" onclick="closeNav()">FAQ</a>
   <a href="/docs" onclick="closeNav()">Docs</a>
   <a href="https://github.com/Jay-Suryawansh7/tspoonbase" onclick="closeNav()">GitHub</a>
   <a href="/docs/getting-started/quick-start" class="btn-primary" onclick="closeNav()">Get Started</a>
@@ -247,6 +265,91 @@ code,pre{font-family:var(--font-mono)}
   </div>
 </section>
 
+<!-- FAQ -->
+<section id="faq" class="container section">
+  <div style="text-align:center;margin-bottom:48px">
+    <div class="pill" style="margin-bottom:16px">Got questions?</div>
+    <h2 style="font-size:clamp(28px,3.5vw,38px);font-weight:700;margin-bottom:12px">Frequently Asked Questions</h2>
+    <p style="color:var(--text-secondary);font-size:16px;max-width:500px;margin:0 auto">Everything you need to know about TspoonBase.</p>
+  </div>
+  <div style="max-width:720px;margin:0 auto">
+    <div class="faq-item" data-delay="0">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        What is TspoonBase?
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">TspoonBase is an open-source Backend-as-a-Service (BaaS) written in TypeScript. It provides SQLite, Express, WebSocket, authentication, file storage, AI tools, vector search, and an admin UI — all in a single npm package. No Docker, no microservices, no YAML.</div></div>
+    </div>
+    <div class="faq-item" data-delay="100">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        How is this different from PocketBase?
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">While inspired by PocketBase, TspoonBase is built entirely in TypeScript with a Node.js runtime. This means you get native npm ecosystem access, TypeScript-first DX, easy customization through code, and no Go dependency. It also includes built-in AI tools, MFA/TOTP, and S3-compatible storage.</div></div>
+    </div>
+    <div class="faq-item" data-delay="200">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        Do I need Docker or a database?
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">No. TspoonBase uses SQLite as its embedded database, so there's zero infrastructure to manage. Just <code style="color:var(--text-code)">npx tspoonbase serve</code> and you're running. For production, you can optionally connect S3 for file storage and configure SMTP for emails.</div></div>
+    </div>
+    <div class="faq-item" data-delay="300">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        Can I use TspoonBase in production?
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Absolutely. TspoonBase is designed for production use with built-in security features including Helmet, rate limiting, CORS configuration, JWT-based auth, SQL injection protection, and MFA/TOTP support. It's already being used in production by developers worldwide.</div></div>
+    </div>
+    <div class="faq-item" data-delay="400">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        How do I deploy TspoonBase?
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Deploy it anywhere Node.js runs — VPS, Railway, Fly.io, Render, or your own server. Since it's a single process with SQLite, deployment is straightforward. For horizontal scaling, you can configure read replicas and S3 for file storage.</div></div>
+    </div>
+    <div class="faq-item" data-delay="500">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        Is there a hosted/cloud version?
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="faq-answer"><div class="faq-answer-inner">Not yet. TspoonBase is self-hosted and open source (Apache-2.0). You own your data completely. A cloud-hosted option is on the roadmap — <a href="https://github.com/Jay-Suryawansh7/tspoonbase" target="_blank" style="color:var(--blue-bright);text-decoration:underline">star the repo</a> to stay updated.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY POLICY -->
+<section id="privacy" class="container section">
+  <div style="text-align:center;margin-bottom:48px">
+    <div class="pill" style="margin-bottom:16px">Your Data Matters</div>
+    <h2 style="font-size:clamp(28px,3.5vw,38px);font-weight:700;margin-bottom:12px">Privacy Policy</h2>
+    <p style="color:var(--text-secondary);font-size:15px;margin-bottom:40px">Last updated: May 1, 2026</p>
+  </div>
+  <div class="glass-card privacy-content" style="padding:48px;text-align:left">
+    <h3>1. Information We Collect</h3>
+    <p>TspoonBase is self-hosted software — we do not collect, store, or process any data on our servers. When you self-host TspoonBase, all data (including user accounts, records, files, and logs) stays entirely on your own infrastructure.</p>
+    <p>If you visit the documentation site or landing page, we may collect standard web analytics data (page views, browser type, referring site) to improve the experience.</p>
+
+    <h3>2. How We Use Information</h3>
+    <p>Any analytics data collected is used solely to understand usage patterns and improve the project. We do not sell, rent, or share personal information with third parties.</p>
+
+    <h3>3. Data Storage & Security</h3>
+    <p>When self-hosted, you are responsible for securing your own deployment. TspoonBase includes built-in security features — encryption at rest (SQLite), JWT-based authentication, rate limiting, and CORS controls — to help you protect your data.</p>
+
+    <h3>4. Cookies</h3>
+    <p>The documentation site may use essential cookies for functionality (e.g., theme preferences). No tracking cookies are used.</p>
+
+    <h3>5. Third-Party Services</h3>
+    <p>TspoonBase integrates with optional third-party services you explicitly configure: S3-compatible storage, SMTP email providers, and AI providers (OpenAI, Anthropic, Ollama). Data sent through these services is governed by their respective privacy policies.</p>
+
+    <h3>6. Open Source</h3>
+    <p>TspoonBase is open source under the Apache-2.0 license. You can audit the code at any time on <a href="https://github.com/Jay-Suryawansh7/tspoonbase" target="_blank">GitHub</a> to verify our privacy commitments.</p>
+
+    <h3>7. Contact</h3>
+    <p>If you have questions about this privacy policy, reach out via <a href="https://github.com/Jay-Suryawansh7/tspoonbase/discussions" target="_blank">GitHub Discussions</a> or open an issue on the repository.</p>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer style="border-top:1px solid var(--bg-border);margin-top:40px">
 <div class="container" style="padding-top:80px;padding-bottom:0">
@@ -264,7 +367,7 @@ code,pre{font-family:var(--font-mono)}
       </div>
     </div>
     <div><div class="footer-col-title">Product</div><a href="#showcase" class="footer-link">Features</a><a href="#features" class="footer-link">Components</a><a href="#stack" class="footer-link">Templates</a><a href="#" class="footer-link">Roadmap</a></div>
-    <div><div class="footer-col-title">Resources</div><a href="/docs" class="footer-link">Docs</a><a href="#" class="footer-link">Blog</a><a href="#" class="footer-link">Changelog</a><a href="#" class="footer-link">FAQ</a></div>
+    <div><div class="footer-col-title">Resources</div><a href="/docs" class="footer-link">Docs</a><a href="#" class="footer-link">Blog</a><a href="#" class="footer-link">Changelog</a><a href="#faq" class="footer-link">FAQ</a><a href="#privacy" class="footer-link">Privacy Policy</a></div>
     <div>
       <div class="footer-col-title">Community</div>
       <a href="https://github.com/Jay-Suryawansh7/tspoonbase" target="_blank" class="footer-link">GitHub</a>
@@ -280,7 +383,7 @@ code,pre{font-family:var(--font-mono)}
   </div>
   <div class="footer-bottom">
     <span>&copy; 2024 TspoonBase. Apache-2.0 License.</span>
-    <div class="footer-bottom-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a></div>
+    <div class="footer-bottom-links"><a href="#privacy">Privacy</a><a href="#">Terms</a><a href="#">Security</a></div>
   </div>
 </div>
 </footer>
@@ -291,6 +394,10 @@ code,pre{font-family:var(--font-mono)}
 
 // IntersectionObserver for feature cards
 (function(){const o=new IntersectionObserver(function(e){e.forEach(function(e,t){e.isIntersecting&&(setTimeout(function(){e.target.classList.add('visible')},t*80),o.unobserve(e.target))})},{threshold:.1});document.querySelectorAll('.feat-card').forEach(function(e){o.observe(e)})})();
+
+// FAQ accordion
+function toggleFaq(btn){const i=btn.parentElement;i.classList.toggle('open')}
+(function(){const o=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting){var t=parseInt(e.target.getAttribute('data-delay'))||0;setTimeout(function(){e.target.classList.add('visible')},t);o.unobserve(e.target)}})},{threshold:.1});document.querySelectorAll('.faq-item').forEach(function(e){o.observe(e)})})();
 
 // Show floating decorations on desktop
 if(window.innerWidth>=1024)document.querySelector('.floats-lg')&&(document.querySelector('.floats-lg').style.display='block');
