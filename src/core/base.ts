@@ -443,12 +443,17 @@ export class BaseApp {
         recordRef TEXT NOT NULL,
         collectionId TEXT NOT NULL,
         method TEXT NOT NULL DEFAULT 'totp',
+        secret TEXT DEFAULT '',
+        backupCodes TEXT DEFAULT '',
         createdAt TEXT NOT NULL,
         expiresAt TEXT NOT NULL,
         created TEXT NOT NULL,
         updated TEXT NOT NULL
       )
     `)
+
+    try { db.exec('ALTER TABLE _mfas ADD COLUMN secret TEXT DEFAULT \'\'') } catch {}
+    try { db.exec('ALTER TABLE _mfas ADD COLUMN backupCodes TEXT DEFAULT \'\'') } catch {}
 
     db.exec(`
       CREATE TABLE IF NOT EXISTS _otps (

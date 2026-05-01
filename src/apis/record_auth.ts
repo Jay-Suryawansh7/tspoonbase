@@ -364,8 +364,8 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const now = new Date().toISOString()
       const mfaId = generateRandomString(16)
       db.prepare(
-        `INSERT INTO _mfas (id, recordRef, collectionId, method, created, updated, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(mfaId, payload.id, collection.id, 'totp', now, now, now, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString())
+        `INSERT INTO _mfas (id, recordRef, collectionId, method, secret, backupCodes, created, updated, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(mfaId, payload.id, collection.id, 'totp', secret, JSON.stringify(backupCodes), now, now, now, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString())
 
       res.json({
         secret,
@@ -402,8 +402,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'MFA not set up.' })
       }
 
-      // Simple TOTP verification (time-based)
-      const expectedCode = generateTOTPCode(mfaRow.id) // Using id as secret proxy
+      const expectedCode = generateTOTPCode(mfaRow.secret || mfaRow.id)
       if (code !== expectedCode) {
         return res.status(400).json({ code: 400, message: 'Invalid MFA code.' })
       }
@@ -479,7 +478,6 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
   router.use('/api/collections/:collectionIdOrName', authRouter)
 }
 
-// Simple TOTP code generator (for demo - use speakeasy in production)
 function generateTOTPCode(secret: string, period = 30, digits = 6): string {
   const now = Math.floor(Date.now() / 1000)
   const timeStep = Math.floor(now / period)
