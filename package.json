@@ -1,6 +1,6 @@
 {
   "name": "tspoonbase",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "TspoonBase - a TypeScript backend-as-a-service with SQLite, auth, realtime, and admin UI. Inspired by PocketBase.",
   "repository": "https://github.com/Jay-Suryawansh7/tspoonbase",
   "homepage": "https://tspoonbase-docs.vercel.app/",
@@ -23,6 +23,8 @@
     "build:ui": "cd admin && npm install && npm run build",
     "prepublishOnly": "npm run build",
     "dev": "tsx watch src/cli.ts serve --dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
   },
@@ -53,12 +55,15 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^20.11.0",
     "@types/nodemailer": "^6.4.14",
+    "@types/supertest": "^7.2.0",
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": ">=20.0.0"
