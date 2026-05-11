@@ -65,3 +65,9 @@ test_*/
 *.sh
 
 .gstack/
+
+# Torque Next.js build
+torque/.next/
+torque/out/
+torque/next-env.d.ts
+torque/node_modules/

@@ -150,4 +150,15 @@ export const navigation: NavItem[] = [
       { id: 'architecture-diagram', label: 'Architecture Diagram', path: '/docs/configuration/architecture-diagram' },
     ],
   },
+  {
+    id: 'torque',
+    label: 'Torque',
+    path: '/docs/torque',
+    children: [
+      { id: 'overview', label: 'Overview', path: '/docs/torque/overview' },
+      { id: 'node-types', label: 'Node Types', path: '/docs/torque/node-types' },
+      { id: 'exporting', label: 'Exporting Workflows', path: '/docs/torque/exporting' },
+      { id: 'api-endpoints', label: 'API Endpoints', path: '/docs/torque/api-endpoints' },
+    ],
+  },
 ]

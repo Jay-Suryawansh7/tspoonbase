@@ -113,6 +113,18 @@ export default function Navbar() {
             </Link>
 
             <Link
+              to="/docs/torque/overview"
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                location.pathname.startsWith('/docs/torque')
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-theme-tertiary hover:bg-theme-surface hover:text-theme-secondary'
+              }`}
+            >
+              <Code className="h-3.5 w-3.5" />
+              <span>Torque</span>
+            </Link>
+
+            <Link
               to="/about"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                 isAbout
@@ -268,6 +280,14 @@ export default function Navbar() {
                 >
                   <Layers className="h-4 w-4" />
                   Projects
+                </Link>
+                <Link
+                  to="/docs/torque/overview"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-theme-secondary transition-colors hover:bg-theme-surface hover:text-theme"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Code className="h-4 w-4" />
+                  Torque
                 </Link>
                 <Link
                   to="/about"

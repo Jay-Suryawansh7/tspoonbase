@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-surface: #1a1a26;
+  --bg-elevated: #22222f;
+  --border-color: #2a2a3a;
+  --border-subtle: #1e1e2e;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9898b0;
+  --text-muted: #606078;
+  --accent: #6c5ce7;
+  --accent-hover: #7c6cf7;
+  --accent-muted: #3d2e9a;
+  --green: #40c057;
+  --red: #e03131;
+  --amber: #f59f00;
+  --blue: #339af0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.react-flow__node { cursor: pointer; }
+.react-flow__node.selected .torque-node { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-muted); }
+.react-flow__edge-path { stroke: var(--border-color) !important; stroke-width: 2 !important; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--accent) !important; }
+.react-flow__edge-path:hover { stroke: var(--accent-hover) !important; }
+.react-flow__controls { background: var(--bg-surface) !important; border: 1px solid var(--border-color) !important; border-radius: 8px !important; overflow: hidden; }
+.react-flow__controls button { background: var(--bg-surface) !important; border-bottom: 1px solid var(--border-color) !important; fill: var(--text-secondary) !important; }
+.react-flow__controls button:hover { background: var(--bg-elevated) !important; }
+.react-flow__background { background: var(--bg-primary) !important; }
+.react-flow__minimap { background: var(--bg-surface) !important; border: 1px solid var(--border-color) !important; border-radius: 8px !important; overflow: hidden; }
+.react-flow__handle { width: 8px; height: 8px; background: var(--accent) !important; border: 2px solid var(--bg-primary) !important; }
+.react-flow__handle-connecting { background: var(--green) !important; }
+.react-flow__handle-valid { background: var(--green) !important; }

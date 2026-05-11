@@ -11,6 +11,7 @@ import Migrations from './migrations'
 import JavascriptHooks from './javascript-hooks'
 import APIReference from './api-reference'
 import Configuration from './configuration'
+import Torque from './torque'
 
 const contentMap: Record<string, React.FC> = {
   'getting-started': GettingStarted,
@@ -24,6 +25,7 @@ const contentMap: Record<string, React.FC> = {
   'javascript-hooks': JavascriptHooks,
   'api-reference': APIReference,
   'configuration': Configuration,
+  'torque': Torque,
 }
 
 export default function DocsContent() {
