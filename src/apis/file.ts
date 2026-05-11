@@ -3,6 +3,7 @@ import { BaseApp } from '../core/base'
 import { RecordModel as PBRecord } from '../core/record'
 import { canAccessRecord } from './record_helpers'
 import { RequestInfo } from '../core/record_field_resolver'
+import { requireSuperuserAuth } from './middlewares_auth'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
@@ -108,7 +109,7 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
   })
 
   // File upload endpoint
-  router.post('/api/collections/:collectionIdOrName/records/:recordId/files', upload.array('files', 10), async (req: Request, res: Response) => {
+  router.post('/api/collections/:collectionIdOrName/records/:recordId/files', requireSuperuserAuth(app), upload.array('files', 10), async (req: Request, res: Response) => {
     try {
       const { collectionIdOrName, recordId } = req.params
       const collection = await app.findCollectionByNameOrId(collectionIdOrName)
@@ -265,7 +266,7 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
   })
 
   // File delete endpoint
-  router.delete('/api/collections/:collectionIdOrName/records/:recordId/files/:filename', async (req: Request, res: Response) => {
+  router.delete('/api/collections/:collectionIdOrName/records/:recordId/files/:filename', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const { collectionIdOrName, recordId, filename } = req.params
       const collection = await app.findCollectionByNameOrId(collectionIdOrName)

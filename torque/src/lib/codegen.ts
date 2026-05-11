@@ -158,7 +158,10 @@ const NODE_EXECUTORS: Record<string, string> = {
   cloudinary_upload: `async (config, input) => ({ message: 'Cloudinary upload requires cloudinary SDK at runtime', config, input })`,
 
   condition: `async (config, input) => {
-    const fn = new Function('input', \`return Boolean(\${config.expression})\`)
+    const expr = String(config.expression || '')
+    const blocked = ['process', 'require', 'import(', 'eval(', 'constructor', 'prototype', '__proto__']
+    if (blocked.some(b => expr.includes(b))) return { passed: false, input, error: 'blocked keywords' }
+    const fn = new Function('input', \`return Boolean(\${expr})\`)
     return { passed: fn(input), input }
   }`,
   switch: `async (config, input) => input`,
@@ -169,7 +172,10 @@ const NODE_EXECUTORS: Record<string, string> = {
     return input
   }`,
   code: `async (config, input) => {
-    const fn = new Function('input', config.code || 'return input')
+    const code = String(config.code || 'return input')
+    const blocked = ['process', 'require', 'import(', 'eval(', 'constructor', 'prototype', '__proto__']
+    if (blocked.some(b => code.includes(b))) throw new Error('Code contains blocked keywords')
+    const fn = new Function('input', code)
     return fn(input)
   }`,
   retry: `async (config, input) => input`,

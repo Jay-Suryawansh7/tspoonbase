@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { BaseApp } from '../core/base'
 import { Collection } from '../core/collection'
 import { syncRecordTableSchema, createRecordTable } from '../core/schema_sync'
+import { requireSuperuserAuth } from './middlewares_auth'
 
 export function registerCollectionRoutes(app: BaseApp, router: Router): void {
   const collectionRouter = Router()
@@ -33,7 +34,7 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  collectionRouter.post('/', async (req: Request, res: Response) => {
+  collectionRouter.post('/', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const collection = new Collection(req.body)
       await app.save(collection)
@@ -47,7 +48,7 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  collectionRouter.patch('/:idOrName', async (req: Request, res: Response) => {
+  collectionRouter.patch('/:idOrName', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const collection = await app.findCollectionByNameOrId(req.params.idOrName)
       if (!collection) {
@@ -66,7 +67,7 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  collectionRouter.delete('/:idOrName', async (req: Request, res: Response) => {
+  collectionRouter.delete('/:idOrName', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const collection = await app.findCollectionByNameOrId(req.params.idOrName)
       if (!collection) {
@@ -79,7 +80,7 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  collectionRouter.post('/import', async (req: Request, res: Response) => {
+  collectionRouter.post('/import', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const { collections, deleteMissing } = req.body
       const imported: string[] = []

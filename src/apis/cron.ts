@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { BaseApp } from '../core/base'
+import { requireSuperuserAuth } from './middlewares_auth'
 import { Cron } from '../tools/cron/cron'
 
 const cronJobs = new Map<string, any>()
@@ -20,7 +21,7 @@ export function registerCronRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  router.post('/api/crons/:id/run', async (req: Request, res: Response) => {
+  router.post('/api/crons/:id/run', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const job = cronJobs.get(req.params.id)
       if (!job) {

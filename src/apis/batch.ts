@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { BaseApp } from '../core/base'
+import { requireSuperuserAuth } from './middlewares_auth'
 import http from 'http'
 
 interface BatchRequest {
@@ -16,7 +17,7 @@ interface BatchResponse {
 }
 
 export function registerBatchRoutes(app: BaseApp, router: Router): void {
-  router.post('/api/batch', async (req: Request, res: Response) => {
+  router.post('/api/batch', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const { requests } = req.body
       if (!Array.isArray(requests)) {

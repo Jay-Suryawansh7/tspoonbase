@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import multer from 'multer'
 import { BaseApp } from '../core/base'
+import { requireSuperuserAuth } from './middlewares_auth'
 import path from 'path'
 import fs from 'fs'
 
@@ -24,7 +25,7 @@ function checkpointWalIfPossible(app: BaseApp): void {
 export function registerBackupRoutes(app: BaseApp, router: Router): void {
   const backupDir = createBackupDir(app)
 
-  router.get('/api/backups', async (_req: Request, res: Response) => {
+  router.get('/api/backups', requireSuperuserAuth(app), async (_req: Request, res: Response) => {
     try {
       if (!fs.existsSync(backupDir)) {
         return res.json([])
@@ -48,7 +49,7 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  router.post('/api/backups', async (req: Request, res: Response) => {
+  router.post('/api/backups', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const { name } = req.body
       const sanitized = name
@@ -119,7 +120,7 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
     limits: { fileSize: BACKUP_FILE_SIZE_LIMIT },
   })
 
-  router.post('/api/backups/upload', upload.single('file'), async (req: Request, res: Response) => {
+  router.post('/api/backups/upload', requireSuperuserAuth(app), upload.single('file'), async (req: Request, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ code: 400, message: 'No file provided' })
@@ -153,7 +154,7 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  router.post('/api/backups/:key/restore', async (req: Request, res: Response) => {
+  router.post('/api/backups/:key/restore', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const backupKey = path.basename(req.params.key).replace(/\.\./g, '')
       const backupPath = path.join(backupDir, backupKey)
@@ -224,7 +225,7 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  router.delete('/api/backups/:key', async (req: Request, res: Response) => {
+  router.delete('/api/backups/:key', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const backupKey = path.basename(req.params.key).replace(/\.\./g, '')
       const backupPath = path.join(backupDir, backupKey)

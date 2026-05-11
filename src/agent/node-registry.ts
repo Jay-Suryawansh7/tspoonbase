@@ -28,9 +28,14 @@ function makeResult(nodeId: string, nodeType: string, output: any, status: 'succ
 }
 
 async function executeSandboxed(code: string, input: any, ctx: ExecutionContext, timeoutMs = 5000): Promise<any> {
-  const fn = new Function('input', 'ctx', 'console', 'setTimeout', 'setInterval', 'require', '__dirname', '__filename', 'process', code)
+  // Strip dangerous statements before execution
+  const blocked = ['process', 'require', '__dirname', '__filename', 'global', 'import(', 'eval(', 'constructor']
+  const hasBlocked = blocked.some(b => code.includes(b))
+  if (hasBlocked) throw new Error('Code contains blocked identifiers: process, require, import, eval, constructor, __dirname, __filename, global')
+
+  const fn = new Function('input', 'ctx', 'console', code)
   const result = await Promise.race([
-    fn(input, ctx, ctx.logger ? { log: ctx.logger } : console, undefined, undefined, undefined, undefined, undefined, undefined),
+    fn(input, ctx, ctx.logger ? { log: ctx.logger } : console),
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Code execution timed out')), timeoutMs)),
   ])
   return result
@@ -189,8 +194,12 @@ registerNode({
   description: 'Route execution based on a condition',
   category: 'logic',
   execute: async (config, input, ctx) => {
-    const expression = config.expression
+    const expression = String(config.expression || '')
     if (!expression) return makeResult(ctx.executionId, 'condition', { passed: true })
+    const blocked = ['process', 'require', 'import(', 'eval(', 'constructor', 'prototype', '__proto__']
+    if (blocked.some(b => expression.includes(b))) {
+      return makeResult(ctx.executionId, 'condition', { passed: false, input }, 'error', 'Expression contains blocked keywords')
+    }
     try {
       const fn = new Function('input', `return Boolean(${expression})`)
       const passed = fn(input)

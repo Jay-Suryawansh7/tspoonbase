@@ -635,12 +635,14 @@ export class BaseApp {
       return envSecret
     }
     const secret = this._settings?.jwtSecret
-    if (secret && secret.length >= 16) {
+    if (secret && secret.length >= 32) {
       return secret
     }
-    const fallback = this._settings?.appName || 'tspoonbase-default-secret'
-    this.logger().warn('JWT_SECRET not configured - using appName. Set JWT_SECRET env var or jwtSecret in Admin UI for production!')
-    return fallback
+    throw new Error(
+      'JWT_SECRET not configured. Generate a secure random key:\n' +
+      '  node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"\n' +
+      'Then set it as JWT_SECRET env var or in Admin UI settings.'
+    )
   }
 
   getJwtSecretSafe(): string {

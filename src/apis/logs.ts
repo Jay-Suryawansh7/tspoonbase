@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express'
 import { BaseApp } from '../core/base'
+import { requireSuperuserAuth } from './middlewares_auth'
 
 export function registerLogRoutes(app: BaseApp, router: Router): void {
-  router.get('/api/logs', async (req: Request, res: Response) => {
+  router.get('/api/logs', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const db = app.db().getDataDB()
       const page = parseInt(req.query.page as string) || 1
@@ -36,7 +37,7 @@ export function registerLogRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  router.get('/api/logs/stats', async (req: Request, res: Response) => {
+  router.get('/api/logs/stats', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const db = app.db().getDataDB()
       const rows = db.prepare(`
