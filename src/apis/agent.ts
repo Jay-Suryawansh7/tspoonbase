@@ -6,6 +6,20 @@ import { listNodes, getNode } from '../agent/node-registry'
 import { WorkflowEngine } from '../agent/workflow-engine'
 import { WorkflowDefinition } from '../agent/types'
 
+// FIXED[M-1]: Deep-scrub secrets at all nesting levels in an object tree
+const DEEP_SCRUB_KEYS = new Set(['apiKey', 'api_key', 'password', 'secret', 'token', 'authorization', 'auth'])
+
+function deepScrub(obj: any, secretKeys: Set<string>): void {
+  if (typeof obj !== 'object' || obj === null) return
+  for (const key of Object.keys(obj)) {
+    if (secretKeys.has(key)) {
+      obj[key] = '***'
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      deepScrub(obj[key], secretKeys)
+    }
+  }
+}
+
 export function registerAgentRoutes(app: BaseApp, router: Router): void {
   const agentRouter = Router()
 
@@ -112,26 +126,9 @@ export function registerAgentRoutes(app: BaseApp, router: Router): void {
       if (!row) return res.status(404).json({ code: 404, message: 'Workflow not found' })
 
       const definition = JSON.parse(row.definition)
-      // Scrub API keys and secrets from node configs
-      if (definition.nodes) {
-        const secretKeys = new Set(['apiKey', 'api_key', 'password', 'secret', 'token', 'authorization', 'auth'])
-        for (const node of definition.nodes) {
-          if (node.config) {
-            for (const key of Object.keys(node.config)) {
-              if (secretKeys.has(key)) {
-                node.config[key] = '***'
-              }
-            }
-          }
-        }
-      }
-      if (definition.config) {
-        const scrubbedConfig: Record<string, any> = {}
-        for (const [key, value] of Object.entries(definition.config)) {
-          scrubbedConfig[key] = ['apiKey', 'api_key', 'secret', 'token', 'password'].includes(key) ? '***' : value
-        }
-        definition.config = scrubbedConfig
-      }
+      // FIXED[M-1]: Deep-scrub secrets at all nesting levels
+      const secretKeys = new Set(['apiKey', 'api_key', 'password', 'secret', 'token', 'authorization', 'auth'])
+      deepScrub(definition, secretKeys)
       res.json({ code: 200, data: { id: row.id, workflowId: row.workflowId, name: row.name, description: row.description, version: row.version, enabled: row.enabled, created: row.created, updated: row.updated, nodes: definition.nodes, edges: definition.edges, config: definition.config } })
     } catch (err: any) {
       app.logger().error(err.message || err)
@@ -176,8 +173,11 @@ export function registerAgentRoutes(app: BaseApp, router: Router): void {
 
       const executionId = result.executionId
       const now = new Date().toISOString()
+      // FIXED[M-1]: Scrub secrets from input before persisting to execution history
+      const safeInput = req.body?.input ? JSON.parse(JSON.stringify(req.body.input)) : {}
+      deepScrub(safeInput, DEEP_SCRUB_KEYS)
       db.prepare(`INSERT INTO _agentExecutions (id, workflowId, status, trigger, input, output, results, duration, error, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(executionId, row.workflowId, result.status, 'api', JSON.stringify(req.body?.input || {}), JSON.stringify(result.results[result.results.length - 1]?.output || null), JSON.stringify(result.results), result.duration || 0, result.error || '', now)
+        .run(executionId, row.workflowId, result.status, 'api', JSON.stringify(safeInput), JSON.stringify(result.results[result.results.length - 1]?.output || null), JSON.stringify(result.results), result.duration || 0, result.error || '', now)
 
       // Cleanup old execution records (keep last 1000 per workflow)
       db.prepare(`DELETE FROM _agentExecutions WHERE workflowId = ? AND id NOT IN (SELECT id FROM _agentExecutions WHERE workflowId = ? ORDER BY created DESC LIMIT 1000)`).run(row.workflowId, row.workflowId)

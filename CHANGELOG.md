@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.13.1 — Performance & Security Hardening (2026-05-14)
+
+### High
+- **H-1:** Converted `LocalBlobDriver` from sync `fs.*` to async `fs/promises` — file uploads, downloads, and deletes no longer block the event loop
+- **H-2:** Replaced synchronous `scryptSync` with async `crypto.scrypt` + in-memory derived-key cache (5-min TTL) — settings encryption/decryption no longer blocks the event loop
+
+### Medium
+- **M-1:** Replaced flat secret-key scrubbing with recursive `deepScrub()` in agent workflow definitions and execution input storage — secrets at any nesting depth are now sanitized
+
+### Low
+- **L-1:** Covered by H-2 async scrypt migration and key cache
+
+### Verified Clean
+This audit round confirmed the following areas are free of findings: SQL injection (all identifier paths validated, all values parameterized), XSS (no HTML rendering), CSRF (Bearer token auth), mass assignment (field whitelists on all write paths), auth (all sensitive endpoints gated), rate limiting (enabled by default, applied to all auth flows), error leakage (all errors logged server-side only), command injection (zero child_process usage), crypto (bcrypt, AES-256-CBC, per-encryption salt, timing-safe OTP comparison, no Math.random).
+
 ## v0.13.0 — Security Patch (2026-05-14)
 
 ### Critical

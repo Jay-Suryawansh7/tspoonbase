@@ -42,7 +42,8 @@ export function registerSettingsRoutes(app: BaseApp, router: Router): void {
       let settings = { ...app.settings(), ...picked as any }
 
       // Encrypt sensitive fields before saving
-      settings = encryption.encryptSettings(settings)
+      // FIXED[H-2]: Await async encryptSettings
+      settings = await encryption.encryptSettings(settings)
 
       const db = app.db().getDataDB()
       const now = new Date().toISOString()

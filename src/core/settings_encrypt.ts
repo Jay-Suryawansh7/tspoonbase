@@ -3,20 +3,21 @@ import { encrypt, decrypt } from '../tools/security/crypto'
 
 const ENCRYPTED_KEYS = ['smtp.password', 's3.secret', 'appURL']
 
-export function encryptSettings(settings: Record<string, any>, secret: string): Record<string, any> {
+// FIXED[H-2]: Made async to support async scrypt in crypto.ts
+export async function encryptSettings(settings: Record<string, any>, secret: string): Promise<Record<string, any>> {
   const encrypted = { ...settings }
 
   for (const key of ENCRYPTED_KEYS) {
     const value = getNestedValue(settings, key)
     if (value && typeof value === 'string' && !isEncrypted(value)) {
-      setNestedValue(encrypted, key, `enc:${encrypt(value, secret)}`)
+      setNestedValue(encrypted, key, `enc:${await encrypt(value, secret)}`)
     }
   }
 
   return encrypted
 }
 
-export function decryptSettings(settings: Record<string, any>, secret: string): Record<string, any> {
+export async function decryptSettings(settings: Record<string, any>, secret: string): Promise<Record<string, any>> {
   const decrypted = { ...settings }
 
   for (const key of ENCRYPTED_KEYS) {
@@ -24,7 +25,7 @@ export function decryptSettings(settings: Record<string, any>, secret: string): 
     if (value && typeof value === 'string' && isEncrypted(value)) {
       try {
         const encryptedValue = value.slice(4) // Remove 'enc:' prefix
-        setNestedValue(decrypted, key, decrypt(encryptedValue, secret))
+        setNestedValue(decrypted, key, await decrypt(encryptedValue, secret))
       } catch {
         // If decryption fails, keep original value
       }
@@ -77,20 +78,21 @@ export class SettingsEncryption {
     return this.app.encryptionEnv
   }
 
-  encrypt(value: string): string {
-    return `enc:${encrypt(value, this.getSecret())}`
+  // FIXED[H-2]: Made async to support async scrypt
+  async encrypt(value: string): Promise<string> {
+    return `enc:${await encrypt(value, this.getSecret())}`
   }
 
-  decrypt(value: string): string {
+  async decrypt(value: string): Promise<string> {
     if (!isEncrypted(value)) return value
-    return decrypt(value.slice(4), this.getSecret())
+    return await decrypt(value.slice(4), this.getSecret())
   }
 
-  encryptSettings(settings: Record<string, any>): Record<string, any> {
+  async encryptSettings(settings: Record<string, any>): Promise<Record<string, any>> {
     return encryptSettings(settings, this.getSecret())
   }
 
-  decryptSettings(settings: Record<string, any>): Record<string, any> {
+  async decryptSettings(settings: Record<string, any>): Promise<Record<string, any>> {
     return decryptSettings(settings, this.getSecret())
   }
 }

@@ -1,6 +1,30 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import { createHmac, createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto'
+import { createHmac, createCipheriv, createDecipheriv, randomBytes, scrypt, createHash } from 'crypto'
+import { promisify } from 'util'
+
+// FIXED[H-2]/[L-1]: Async scrypt with in-memory derived-key cache (5-min TTL)
+const scryptAsync = promisify(scrypt)
+const keyCache = new Map<string, { key: Buffer; expiresAt: number }>()
+const KEY_CACHE_TTL = 5 * 60 * 1000
+
+function getCachedKey(cacheKey: string): Buffer | undefined {
+  const entry = keyCache.get(cacheKey)
+  if (entry && Date.now() < entry.expiresAt) return entry.key
+  keyCache.delete(cacheKey)
+  return undefined
+}
+
+function setCachedKey(cacheKey: string, key: Buffer): void {
+  keyCache.set(cacheKey, { key, expiresAt: Date.now() + KEY_CACHE_TTL })
+  // Evict expired entries periodically (limit map growth)
+  if (keyCache.size > 100) {
+    const now = Date.now()
+    for (const [k, v] of keyCache) {
+      if (now >= v.expiresAt) keyCache.delete(k)
+    }
+  }
+}
 
 let SALT_ROUNDS = 12
 
@@ -74,9 +98,15 @@ export function generateRandomStringByRegex(pattern: string): string {
 // FIXED[M-2]: Use random per-encryption salt instead of hardcoded/host-derived salt
 const SALT_LENGTH = 16
 
-export function encrypt(plaintext: string, secret: string): string {
+// FIXED[H-2]/[L-1]: Async scrypt with derived-key cache
+export async function encrypt(plaintext: string, secret: string): Promise<string> {
   const salt = randomBytes(SALT_LENGTH)
-  const key = scryptSync(secret, salt, 32)
+  const cacheKey = createHash('sha256').update(secret).update(salt).digest('hex')
+  let key = getCachedKey(cacheKey)
+  if (!key) {
+    key = await scryptAsync(secret, salt, 32) as Buffer
+    setCachedKey(cacheKey, key)
+  }
   const iv = randomBytes(16)
   const cipher = createCipheriv('aes-256-cbc', key, iv)
   let encrypted = cipher.update(plaintext, 'utf8', 'hex')
@@ -84,14 +114,19 @@ export function encrypt(plaintext: string, secret: string): string {
   return salt.toString('hex') + ':' + iv.toString('hex') + ':' + encrypted
 }
 
-export function decrypt(ciphertext: string, secret: string): string {
+export async function decrypt(ciphertext: string, secret: string): Promise<string> {
   const parts = ciphertext.split(':')
   // Backward compat: old format is "iv:encrypted" (no salt), new format is "salt:iv:encrypted"
   if (parts.length < 3) {
     const ivHex = parts[0]
     const encrypted = parts.slice(1).join(':')
     const oldSalt = process.env.TSPOONBASE_ENCRYPTION_KEY || 'tspoonbase-enc-salt-v1'
-    const key = scryptSync(secret, oldSalt, 32)
+    const cacheKey = createHash('sha256').update(secret).update(oldSalt).digest('hex')
+    let key = getCachedKey(cacheKey)
+    if (!key) {
+      key = await scryptAsync(secret, oldSalt, 32) as Buffer
+      setCachedKey(cacheKey, key)
+    }
     const iv = Buffer.from(ivHex, 'hex')
     const decipher = createDecipheriv('aes-256-cbc', key, iv)
     let decrypted = decipher.update(encrypted, 'hex', 'utf8')
@@ -101,7 +136,12 @@ export function decrypt(ciphertext: string, secret: string): string {
   const salt = Buffer.from(parts[0], 'hex')
   const ivHex = parts[1]
   const encrypted = parts.slice(2).join(':')
-  const key = scryptSync(secret, salt, 32)
+  const cacheKey = createHash('sha256').update(secret).update(salt).digest('hex')
+  let key = getCachedKey(cacheKey)
+  if (!key) {
+    key = await scryptAsync(secret, salt, 32) as Buffer
+    setCachedKey(cacheKey, key)
+  }
   const iv = Buffer.from(ivHex, 'hex')
   const decipher = createDecipheriv('aes-256-cbc', key, iv)
   let decrypted = decipher.update(encrypted, 'hex', 'utf8')

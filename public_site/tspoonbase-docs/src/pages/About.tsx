@@ -88,7 +88,7 @@ const techStack = [
 const npmPackages = [
   {
     name: 'tspoonbase',
-    version: 'v0.12.1',
+    version: 'v0.13.0',
     description: 'TypeScript backend-as-a-service with SQLite, auth, realtime, AI tools, and React Admin UI.',
     href: 'https://www.npmjs.com/package/tspoonbase',
     tags: ['TypeScript', 'Backend', 'SQLite'],

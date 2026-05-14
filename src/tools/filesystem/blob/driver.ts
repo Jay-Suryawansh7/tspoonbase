@@ -1,3 +1,4 @@
+import { promises as fsPromises } from 'fs'
 import fs from 'fs'
 import path from 'path'
 import { Readable, Writable } from 'stream'
@@ -19,29 +20,40 @@ export abstract class BlobDriver {
   abstract url(key: string): Promise<string>
 }
 
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fsPromises.access(filePath)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export class LocalBlobDriver extends BlobDriver {
   private basePath: string
 
   constructor(basePath: string) {
     super()
     this.basePath = basePath
+    // One-time startup mkdir — sync is acceptable here
     fs.mkdirSync(basePath, { recursive: true })
   }
 
+  // FIXED[H-1]: Converted all sync fs calls to async fs/promises
   async list(prefix = ''): Promise<FileAttributes[]> {
     const dir = path.join(this.basePath, prefix)
-    if (!fs.existsSync(dir)) return []
+    if (!await pathExists(dir)) return []
 
     const files: FileAttributes[] = []
-    const walk = (currentDir: string, currentPrefix: string) => {
-      const entries = fs.readdirSync(currentDir, { withFileTypes: true })
+    const walk = async (currentDir: string, currentPrefix: string) => {
+      const entries = await fsPromises.readdir(currentDir, { withFileTypes: true })
       for (const entry of entries) {
         const fullPath = path.join(currentDir, entry.name)
         const fullPrefix = path.join(currentPrefix, entry.name)
         if (entry.isDirectory()) {
-          walk(fullPath, fullPrefix)
+          await walk(fullPath, fullPrefix)
         } else {
-          const stat = fs.statSync(fullPath)
+          const stat = await fsPromises.stat(fullPath)
           files.push({
             key: fullPrefix,
             size: stat.size,
@@ -51,13 +63,13 @@ export class LocalBlobDriver extends BlobDriver {
       }
     }
 
-    walk(dir, prefix)
+    await walk(dir, prefix)
     return files
   }
 
   async get(key: string): Promise<Readable> {
     const filePath = path.join(this.basePath, key)
-    if (!fs.existsSync(filePath)) {
+    if (!await pathExists(filePath)) {
       throw new Error(`File not found: ${key}`)
     }
     return fs.createReadStream(filePath)
@@ -66,12 +78,12 @@ export class LocalBlobDriver extends BlobDriver {
   async put(key: string, content: Readable | Buffer | string, size?: number): Promise<void> {
     const filePath = path.join(this.basePath, key)
     const dir = path.dirname(filePath)
-    fs.mkdirSync(dir, { recursive: true })
+    await fsPromises.mkdir(dir, { recursive: true })
 
     if (Buffer.isBuffer(content)) {
-      fs.writeFileSync(filePath, content)
+      await fsPromises.writeFile(filePath, content)
     } else if (typeof content === 'string') {
-      fs.writeFileSync(filePath, content)
+      await fsPromises.writeFile(filePath, content)
     } else {
       const writeStream = fs.createWriteStream(filePath)
       await new Promise<void>((resolve, reject) => {
@@ -84,14 +96,14 @@ export class LocalBlobDriver extends BlobDriver {
 
   async delete(key: string): Promise<void> {
     const filePath = path.join(this.basePath, key)
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
+    if (await pathExists(filePath)) {
+      await fsPromises.unlink(filePath)
     }
   }
 
   async exists(key: string): Promise<boolean> {
     const filePath = path.join(this.basePath, key)
-    return fs.existsSync(filePath)
+    return pathExists(filePath)
   }
 
   async url(key: string): Promise<string> {

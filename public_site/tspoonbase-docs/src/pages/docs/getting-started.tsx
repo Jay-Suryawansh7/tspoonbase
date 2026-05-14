@@ -448,6 +448,18 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.13.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-14</p>
+            <h4 className="mt-3 text-sm font-semibold text-red-400">Security Patch — 7 Findings</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li><strong>Critical:</strong> Field names validated with <code>validateIdentifier</code> — closes SQL injection via DDL (CREATE TABLE / ALTER TABLE)</li>
+              <li><strong>Critical:</strong> Semicolon guard added before EXPLAIN — prevents multi-statement injection in view queries</li>
+              <li><strong>High:</strong> Collection name and fields re-validated after <code>Object.assign</code> on PATCH</li>
+              <li><strong>High:</strong> All backup endpoints converted to async <code>fs/promises</code> — no more event-loop blocking</li>
+              <li><strong>Low:</strong> Per-field name validation in collection import endpoint</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.12.1</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-14</p>
             <h4 className="mt-3 text-sm font-semibold text-red-400">Security Patch — 11 Findings</h4>

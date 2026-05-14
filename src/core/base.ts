@@ -160,7 +160,8 @@ export class BaseApp {
       try {
         const parsed = JSON.parse(row.value)
         const encryption = new SettingsEncryption(this)
-        const decrypted = encryption.decryptSettings(parsed)
+        // FIXED[H-2]: Await async decryptSettings
+        const decrypted = await encryption.decryptSettings(parsed)
         this._settings = { ...defaultSettings(), ...decrypted }
       } catch {
         this._settings = defaultSettings()
