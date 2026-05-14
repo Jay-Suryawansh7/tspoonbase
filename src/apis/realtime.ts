@@ -235,6 +235,8 @@ export function getBrokerStats(): { clients: number; channels: number } {
   }
 }
 
+// FIXED[H-5]: Use crypto.randomBytes instead of Math.random()
 function generateClientId(): string {
-  return `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+  const { randomBytes } = require('crypto')
+  return `c_${Date.now().toString(36)}_${randomBytes(4).toString('hex')}`
 }

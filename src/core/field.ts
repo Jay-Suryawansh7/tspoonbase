@@ -42,8 +42,10 @@ export abstract class Field {
   }
 }
 
+// FIXED[H-5]: Use crypto.randomBytes instead of Math.random()
 function generateFieldId(): string {
-  return `fld_${Math.random().toString(36).slice(2, 10)}`
+  const { randomBytes } = require('crypto')
+  return `fld_${randomBytes(5).toString('hex')}`
 }
 
 export class TextField extends Field {

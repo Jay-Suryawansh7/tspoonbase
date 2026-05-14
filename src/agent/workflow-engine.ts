@@ -37,7 +37,9 @@ export class WorkflowEngine {
 
   async execute(input?: any): Promise<WorkflowExecutionResult> {
     const startTime = new Date()
-    const executionId = `exec_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+    // FIXED[H-5]: Use crypto.randomBytes instead of Math.random()
+    const crypto = require('crypto')
+    const executionId = `exec_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`
     const results: NodeExecutionResult[] = []
 
     this.logger(`Starting workflow "${this.workflow.name}" (${executionId})`)

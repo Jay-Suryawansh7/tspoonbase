@@ -23,7 +23,8 @@ function pickCollectionFields(data: Record<string, any>): Record<string, any> {
 export function registerCollectionRoutes(app: BaseApp, router: Router): void {
   const collectionRouter = Router()
 
-  collectionRouter.get('/', async (req: Request, res: Response) => {
+  // FIXED[H-1]: Added requireSuperuserAuth to collection list/detail endpoints
+  collectionRouter.get('/', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const collections = await app.findAllCollections()
       res.json({
@@ -38,7 +39,7 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  collectionRouter.get('/:idOrName', async (req: Request, res: Response) => {
+  collectionRouter.get('/:idOrName', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const collection = await app.findCollectionByNameOrId(req.params.idOrName)
       if (!collection) {
@@ -99,10 +100,23 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
 
   collectionRouter.post('/import', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
-      const { collections, deleteMissing } = req.body
+      const { collections } = req.body
+      if (!Array.isArray(collections)) {
+        return res.status(400).json({ code: 400, message: 'Invalid request: collections must be an array.' })
+      }
       const imported: string[] = []
 
       for (const colData of collections) {
+        // FIXED[L-5]: Validate that each collection object has required fields
+        if (typeof colData !== 'object' || !colData || !colData.name || typeof colData.name !== 'string') {
+          return res.status(400).json({ code: 400, message: 'Each collection must have a valid "name" field.' })
+        }
+        if (colData.type && !['base', 'auth', 'view'].includes(colData.type)) {
+          return res.status(400).json({ code: 400, message: `Invalid collection type: "${colData.type}". Must be base, auth, or view.` })
+        }
+        if (!Array.isArray(colData.fields)) {
+          return res.status(400).json({ code: 400, message: `Collection "${colData.name}" must have a "fields" array.` })
+        }
         const existing = await app.findCollectionByNameOrId(colData.name)
         if (existing) {
           Object.assign(existing, pickCollectionFields(colData))

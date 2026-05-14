@@ -3,11 +3,12 @@ import rateLimit from 'express-rate-limit'
 import { BaseApp } from '../core/base'
 import { RecordModel as PBRecord } from '../core/record'
 import { Collection } from '../core/collection'
-import { hashPassword, verifyPassword, generateJWT, parseJWT, generateRandomString } from '../tools/security/crypto'
+import { hashPassword, verifyPassword, generateJWT, parseJWT, generateRandomString, generateToken } from '../tools/security/crypto'
 import { DateTime } from '../tools/types/types'
 import { oauth2Registry, handleOAuth2Callback, linkExternalAuth } from '../tools/auth/oauth2'
 import { OTP } from '../core/auth_models'
-import { createHash, createHmac } from 'crypto'
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto'
+import { recordFailedAttempt, isLockedOut, clearAttempts } from '../utils/lockout'
 
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -45,6 +46,27 @@ const otpRateLimiter = rateLimit({
   },
 })
 
+// FIXED[C-2]: Rate limiter for OTP verification — 5 attempts/min per IP+otpId
+const otpVerifyRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request): string => {
+    const otpId = req.body?.otpId || 'unknown'
+    const ip = req.ip || req.socket.remoteAddress || 'unknown'
+    return `${ip}:${otpId}`
+  },
+  message: { code: 429, message: 'Too many OTP attempts, please try again later.' },
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      code: 429,
+      message: 'Too many OTP attempts, please try again later.',
+      data: { retryAfter: 60 },
+    })
+  },
+})
+
 export function registerAuthRoutes(app: BaseApp, router: Router): void {
   const authRouter = Router({ mergeParams: true })
 
@@ -58,6 +80,12 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const collection = await app.findCollectionByNameOrId(collectionIdOrName ?? 'users')
       if (!collection || !collection.isAuth()) {
         return res.status(400).json({ code: 400, message: 'Invalid collection.' })
+      }
+
+      // FIXED[M-6]: Check account lockout before attempting authentication
+      const lockoutKey = `record:${collection.id}:${identity.toLowerCase()}`
+      if (isLockedOut(lockoutKey)) {
+        return res.status(429).json({ code: 429, message: 'Account temporarily locked. Try again later.' })
       }
 
       const db = app.db().getDataDB()
@@ -76,14 +104,21 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       }
 
       if (!row) {
+        // FIXED[M-6]: Record failed attempt for lockout tracking
+        recordFailedAttempt(lockoutKey)
         return res.status(400).json({ code: 400, message: 'Invalid login credentials.' })
       }
 
       const passwordHash = row.passwordHash
       const valid = await verifyPassword(password, passwordHash)
       if (!valid) {
+        // FIXED[M-6]: Record failed attempt for lockout tracking
+        recordFailedAttempt(lockoutKey)
         return res.status(400).json({ code: 400, message: 'Invalid login credentials.' })
       }
+
+      // FIXED[M-6]: Clear lockout on successful auth
+      clearAttempts(lockoutKey)
 
       // Check onlyVerified option
       if (collection.authOptions?.onlyVerified && !row.verified) {
@@ -128,8 +163,12 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       if (redirectURL) {
         try {
           const parsed = new URL(redirectURL)
-          const appUrl = app.settings().appURL || 'http://localhost:8090'
-          const allowedOrigins = [appUrl, appUrl.replace(/\/+$/, ''), 'http://localhost:8090', 'http://localhost:3000']
+          const appUrl = app.settings().appURL
+          if (!appUrl) {
+            return res.status(400).json({ code: 400, message: 'appURL is not configured. Set it in settings.' })
+          }
+          // FIXED[L-6]: Only validate against the configured app URL — no hardcoded localhost entries
+          const allowedOrigins = [appUrl, appUrl.replace(/\/+$/, '')]
           const isAllowed = allowedOrigins.some(ao => {
             try {
               const allowedUrl = new URL(ao)
@@ -184,6 +223,16 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
             await linkExternalAuth(app, record, provider, oauthUser.id)
           } else {
             // Create new record
+            // FIXED[C-1]: Only pick explicitly allowed fields from createData — never allow passwordHash through
+            const allowedCreateFields = ['email', 'name', 'avatar']
+            const safeCreateData: Record<string, any> = {}
+            if (createData && typeof createData === 'object') {
+              for (const key of allowedCreateFields) {
+                if (createData[key] !== undefined) {
+                  safeCreateData[key] = createData[key]
+                }
+              }
+            }
             const data: any = {
               collectionId: collection.id,
               collectionName: collection.name,
@@ -191,7 +240,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
               emailVisibility: true,
               verified: true,
               name: oauthUser.name,
-              ...createData,
+              ...safeCreateData,
             }
             record = new PBRecord(collection.id, collection.name, data)
             await app.save(record)
@@ -214,7 +263,7 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
     }
   })
 
-  authRouter.post('/auth-with-otp', async (req: Request, res: Response) => {
+  authRouter.post('/auth-with-otp', otpVerifyRateLimiter, async (req: Request, res: Response) => {
     try {
       const { otpId, password, collectionIdOrName } = req.body
       if (!otpId || !password) {
@@ -238,8 +287,10 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'OTP has expired.' })
       }
 
-      const incomingHash = createHash('sha256').update(password).digest('hex')
-      if (otp.password !== incomingHash) {
+      // FIXED[L-1]: Use timingSafeEqual for constant-time OTP hash comparison
+      const incomingHash = createHash('sha256').update(password).digest()
+      const storedHash = Buffer.from(otp.password, 'hex')
+      if (storedHash.length !== incomingHash.length || !timingSafeEqual(storedHash, incomingHash)) {
         return res.status(400).json({ code: 400, message: 'Invalid OTP password.' })
       }
 
@@ -290,7 +341,8 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
       const record = new PBRecord(collection.id, collection.name, row)
 
       // Generate OTP password (6-digit code)
-      const otpPassword = Math.floor(100000 + Math.random() * 900000).toString()
+      // FIXED[C-3]: Use crypto.randomInt instead of Math.random()
+      const otpPassword = randomInt(100000, 1000000).toString()
       const otpId = generateRandomString(16)
       const now = new Date().toISOString()
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
@@ -301,8 +353,9 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
 
       // Store OTP with hashed password
       const otpHash = createHash('sha256').update(otpPassword).digest('hex')
+      // FIXED[H-3]: Aligned column/placeholder count — 10 columns, 10 placeholders, 10 values
       db.prepare(
-        `INSERT INTO _otps (id, recordRef, collectionId, password, sentTo, created, updated, createdAt, expiresAt, requestIp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO _otps (id, recordRef, collectionId, password, sentTo, created, updated, createdAt, expiresAt, requestIp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(otpId, record.id, collection.id, otpHash, email, now, now, now, expiresAt, requestIp)
 
       // Send OTP email if SMTP is configured
@@ -383,18 +436,22 @@ export function registerAuthRoutes(app: BaseApp, router: Router): void {
 
       // Generate TOTP secret
       const secret = generateRandomString(32)
-      const backupCodes = Array.from({ length: 8 }, () => Math.floor(10000000 + Math.random() * 90000000).toString())
+      // FIXED[C-4]: Use crypto.randomInt for backup codes, hash before storage, return plaintext once
+      const rawBackupCodes = Array.from({ length: 8 }, () => randomInt(10000000, 100000000).toString())
+      const hashedBackupCodes = rawBackupCodes.map(c => createHash('sha256').update(c).digest('hex'))
+      const backupCodes = rawBackupCodes
 
       // Store MFA config
       const now = new Date().toISOString()
       const mfaId = generateRandomString(16)
       db.prepare(
         `INSERT INTO _mfas (id, recordRef, collectionId, method, secret, backupCodes, created, updated, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(mfaId, payload.id, collection.id, 'totp', secret, JSON.stringify(backupCodes), now, now, now, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString())
+      ).run(mfaId, payload.id, collection.id, 'totp', secret, JSON.stringify(hashedBackupCodes), now, now, now, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString())
 
+      // FIXED[C-4]: Return backup codes only on initial setup; they are stored hashed so cannot be retrieved later
       res.json({
         secret,
-        backupCodes,
+        backupCodes: rawBackupCodes,
         qrURL: `otpauth://totp/${collection.name}:${recordRow.email || payload.id}?secret=${secret}&issuer=${app.settings().appName || 'TspoonBase'}`,
       })
     } catch (err: any) {

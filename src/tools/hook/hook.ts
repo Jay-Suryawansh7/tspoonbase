@@ -1,11 +1,13 @@
 import { EventEmitter } from 'events'
+import { randomBytes } from 'crypto'
 
 export class Hook<T = any> {
   private handlers: Array<{ id: string; priority: number; fn: (data: T) => Promise<void> | void }> = []
 
   bind(handler: { id?: string; priority?: number; func: (data: T) => Promise<void> | void }): void {
     this.handlers.push({
-      id: handler.id ?? `handler_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      // FIXED[H-5]: Use crypto.randomBytes instead of Math.random()
+      id: handler.id ?? `handler_${Date.now()}_${randomBytes(4).toString('hex')}`,
       priority: handler.priority ?? 0,
       fn: handler.func,
     })

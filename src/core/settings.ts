@@ -110,9 +110,10 @@ export function defaultSettings(): AppSettings {
     tokenAuth: {
       enabled: false,
     },
+    // FIXED[H-6]: Rate limiting enabled by default — 60 req/min per IP
     rateLimits: {
-      enabled: false,
-      rules: [],
+      enabled: true,
+      rules: [{ duration: 60, requests: 60 }],
     },
     batch: {
       enabled: true,

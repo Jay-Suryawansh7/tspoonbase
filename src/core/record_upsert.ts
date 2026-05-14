@@ -50,7 +50,9 @@ export class RecordUpsertForm {
 
     const sanitized: Record<string, any> = {}
     for (const [key, value] of Object.entries(data)) {
-      if (!protectedFields.includes(key)) {
+      // FIXED[H-4]: Strip +/- modifiers before checking protected field list
+      const resolvedKey = key.startsWith('+') ? key.slice(1) : key.endsWith('-') ? key.slice(0, -1) : key
+      if (!protectedFields.includes(resolvedKey)) {
         if (key.startsWith('_') && !['username', 'email'].includes(key)) continue
         sanitized[key] = value
       }

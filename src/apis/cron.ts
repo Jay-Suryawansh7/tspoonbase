@@ -6,7 +6,8 @@ import { Cron } from '../tools/cron/cron'
 const cronJobs = new Map<string, any>()
 
 export function registerCronRoutes(app: BaseApp, router: Router): void {
-  router.get('/api/crons', async (req: Request, res: Response) => {
+  // FIXED[H-2]: Added requireSuperuserAuth to cron list endpoint
+  router.get('/api/crons', requireSuperuserAuth(app), async (req: Request, res: Response) => {
     try {
       const settings = app.settings()
       const jobs = Array.from(cronJobs.entries()).map(([id, job]) => ({

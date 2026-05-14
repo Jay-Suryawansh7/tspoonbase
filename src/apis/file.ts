@@ -197,7 +197,12 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
       }
 
       // Update record with file references
+      // FIXED[M-5]: Validate field parameter against collection schema
       const fieldName = req.query.field as string || 'files'
+      const fieldDef = collection.fields.find(f => f.name === fieldName)
+      if (!fieldDef || fieldDef.type !== 'file') {
+        return res.status(400).json({ code: 400, message: `Invalid field: "${fieldName}" is not a file field.` })
+      }
       const record = new PBRecord(collection.id, collection.name, row)
       const existingFiles = record.get(fieldName) || []
       const allFiles = Array.isArray(existingFiles) ? [...existingFiles, ...savedFiles] : savedFiles

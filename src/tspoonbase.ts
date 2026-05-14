@@ -8,6 +8,15 @@ import path from 'path'
 import fs from 'fs'
 import { once } from 'events'
 
+// FIXED[L-4]: Read version from package.json at runtime
+function loadVersion(): string {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')).version || '0.0.0'
+  } catch {
+    return '0.0.0'
+  }
+}
+
 export interface TspoonBaseConfig {
   hideStartBanner?: boolean
   defaultDev?: boolean
@@ -38,7 +47,8 @@ export class TspoonBase extends BaseApp {
     }
     super(baseConfig)
     this.hideStartBanner = config.hideStartBanner ?? false
-    this.version = '0.9.0'
+    // FIXED[L-4]: Load version from package.json instead of hardcoding
+    this.version = loadVersion()
     this._migrationRunner = undefined
   }
 

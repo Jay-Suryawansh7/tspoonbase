@@ -46,9 +46,24 @@ export async function serve(app: BaseApp, port: number): Promise<http.Server> {
         formAction: ["'self'"],
       },
     },
+    // FIXED[L-4]: Hide X-Powered-By header
+    hidePoweredBy: true,
   }))
   server.use(corsMiddleware())
-  server.use(require('morgan')(':method :url :status :res[content-length] - :response-time ms'))
+  // FIXED[M-4]: Omit query strings from logs to prevent PII leakage in URLs
+  server.use(require('morgan')((tokens: any, req: any, res: any) => {
+    const url = tokens.url(req, res) || ''
+    const pathOnly = url.split('?')[0]
+    return [
+      tokens.method(req, res),
+      pathOnly,
+      tokens.status(req, res),
+      tokens.res(req, res, 'content-length'),
+      '-',
+      tokens['response-time'](req, res),
+      'ms',
+    ].join(' ')
+  }))
 
   // Additional security headers
   server.use((req, res, next) => {
@@ -59,8 +74,9 @@ export async function serve(app: BaseApp, port: number): Promise<http.Server> {
     next()
   })
 
-  server.use(express.json({ limit: '50mb' }))
-  server.use(express.urlencoded({ extended: true, limit: '50mb' }))
+  // FIXED[M-3]: Lower body limits to 10mb to prevent memory exhaustion DoS
+  server.use(express.json({ limit: '10mb' }))
+  server.use(express.urlencoded({ extended: true, limit: '10mb' }))
   // server.use(gzipMiddleware())
   server.use(rateLimitMiddleware(app))
   server.use(bodyLimitMiddleware())

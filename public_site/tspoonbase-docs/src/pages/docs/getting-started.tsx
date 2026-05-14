@@ -448,6 +448,39 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.11.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-12</p>
+            <h4 className="mt-3 text-sm font-semibold text-red-400">Security Remediation — 32 Findings</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li><strong>Critical:</strong> SQL injection via index definitions and field names — parameterized and whitelisted</li>
+              <li><strong>Critical:</strong> Agent/WebSocket endpoints unauthenticated — auth middleware + secret scrubbing</li>
+              <li><strong>Critical:</strong> Weak encryption key fallback — removed, startup validation enforced</li>
+              <li><strong>High:</strong> CORS hardened to explicit allowlist via <code>CORS_ALLOWED_ORIGINS</code></li>
+              <li><strong>High:</strong> Path traversal in file download/delete — resolved path prefix assertion</li>
+              <li><strong>High:</strong> MIME spoofing — magic bytes detection replaces user-supplied mimetype</li>
+              <li><strong>High:</strong> Mass assignment prevention — explicit field whitelist on collections/settings</li>
+              <li><strong>High:</strong> Rate limiting applied to admin auth, password reset, and OTP endpoints</li>
+              <li><strong>High:</strong> Zip slip in backup restore — per-entry path traversal check</li>
+              <li><strong>High:</strong> OTPs now hashed (SHA-256) before storage</li>
+              <li><strong>High:</strong> Batch API now enforces <code>createRule</code> per record</li>
+              <li><strong>High:</strong> Code node execution sandboxed with <code>vm.Script</code></li>
+              <li><strong>Medium:</strong> Collection export gated, TOTP replaced with RFC 6238, OAuth redirect validation</li>
+              <li><strong>Low:</strong> CSP enabled, security headers added, JWT secret rejection, crypto.randomBytes IDs</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.10.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-11</p>
+            <h4 className="mt-3 text-sm font-semibold text-blue-400">Torque Integration &amp; Canvas UI</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li>Torque agent workflow integration with node registry</li>
+              <li>Canvas-based workflow editor UI</li>
+              <li>Dynamic node sizing and 10 new node types</li>
+              <li>Root landing page with auth-gated canvas</li>
+              <li>Routes restructure — /canvas editor, /landing marketing</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.9.0</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-01</p>
             <h4 className="mt-3 text-sm font-semibold text-blue-400">Torque Agent Engine</h4>

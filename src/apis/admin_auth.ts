@@ -4,6 +4,7 @@ import { verifyPassword, generateJWT, hashPassword as hashPasswordAsync } from '
 import { Mailer } from '../tools/mailer/mailer'
 import { EmailTemplateEngine, sendPasswordResetEmail } from '../tools/mailer/templates'
 import rateLimit from 'express-rate-limit'
+import { recordFailedAttempt, isLockedOut, clearAttempts } from '../utils/lockout'
 
 const adminAuthRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -48,21 +49,31 @@ export function registerAdminAuthRoutes(app: BaseApp, router: Router): void {
         return res.status(400).json({ code: 400, message: 'Missing identity or password.' })
       }
 
+      // FIXED[M-6]: Check account lockout before attempting authentication
+      if (isLockedOut(`admin:${identity.toLowerCase()}`)) {
+        return res.status(429).json({ code: 429, message: 'Account temporarily locked. Try again later.' })
+      }
+
       const db = app.db().getDataDB()
       const hasTable = db.prepare(`SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='_superusers'`).get() as { count: number }
       if (hasTable.count === 0) {
+        recordFailedAttempt(`admin:${identity.toLowerCase()}`)
         return res.status(400).json({ code: 400, message: 'Invalid credentials.' })
       }
 
       const row = db.prepare(`SELECT * FROM _superusers WHERE email = ?`).get(identity) as any
       if (!row) {
+        recordFailedAttempt(`admin:${identity.toLowerCase()}`)
         return res.status(400).json({ code: 400, message: 'Invalid credentials.' })
       }
 
       const valid = await verifyPassword(password, row.passwordHash)
       if (!valid) {
+        recordFailedAttempt(`admin:${identity.toLowerCase()}`)
         return res.status(400).json({ code: 400, message: 'Invalid credentials.' })
       }
+
+      clearAttempts(`admin:${identity.toLowerCase()}`)
 
       const token = app.generateJWT(
         { id: row.id, type: 'admin' },

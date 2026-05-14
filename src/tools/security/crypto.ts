@@ -40,12 +40,19 @@ export function parseJWT(token: string, secret: string): { [key: string]: any } 
 }
 
 export function generateRandomString(length: number, chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string {
-  const bytes = randomBytes(length)
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars[bytes[i] % chars.length]
+  // FIXED[L-3]: Rejection sampling to eliminate modulo bias
+  const maxValid = 256 - (256 % chars.length)
+  const result = new Array<string>(length)
+  let generated = 0
+  while (generated < length) {
+    const bytes = randomBytes(length - generated)
+    for (let i = 0; i < bytes.length && generated < length; i++) {
+      if (bytes[i] < maxValid) {
+        result[generated++] = chars[bytes[i] % chars.length]
+      }
+    }
   }
-  return result
+  return result.join('')
 }
 
 export function generateRandomStringByRegex(pattern: string): string {
@@ -58,19 +65,36 @@ export function generateRandomStringByRegex(pattern: string): string {
   })
 }
 
+// FIXED[M-2]: Use random per-encryption salt instead of hardcoded/host-derived salt
+const SALT_LENGTH = 16
+
 export function encrypt(plaintext: string, secret: string): string {
-  const salt = process.env.TSPOONBASE_ENCRYPTION_KEY || 'tspoonbase-enc-salt-v1'
+  const salt = randomBytes(SALT_LENGTH)
   const key = scryptSync(secret, salt, 32)
   const iv = randomBytes(16)
   const cipher = createCipheriv('aes-256-cbc', key, iv)
   let encrypted = cipher.update(plaintext, 'utf8', 'hex')
   encrypted += cipher.final('hex')
-  return iv.toString('hex') + ':' + encrypted
+  return salt.toString('hex') + ':' + iv.toString('hex') + ':' + encrypted
 }
 
 export function decrypt(ciphertext: string, secret: string): string {
-  const [ivHex, encrypted] = ciphertext.split(':')
-  const salt = process.env.TSPOONBASE_ENCRYPTION_KEY || 'tspoonbase-enc-salt-v1'
+  const parts = ciphertext.split(':')
+  // Backward compat: old format is "iv:encrypted" (no salt), new format is "salt:iv:encrypted"
+  if (parts.length < 3) {
+    const ivHex = parts[0]
+    const encrypted = parts.slice(1).join(':')
+    const oldSalt = process.env.TSPOONBASE_ENCRYPTION_KEY || 'tspoonbase-enc-salt-v1'
+    const key = scryptSync(secret, oldSalt, 32)
+    const iv = Buffer.from(ivHex, 'hex')
+    const decipher = createDecipheriv('aes-256-cbc', key, iv)
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+    return decrypted
+  }
+  const salt = Buffer.from(parts[0], 'hex')
+  const ivHex = parts[1]
+  const encrypted = parts.slice(2).join(':')
   const key = scryptSync(secret, salt, 32)
   const iv = Buffer.from(ivHex, 'hex')
   const decipher = createDecipheriv('aes-256-cbc', key, iv)

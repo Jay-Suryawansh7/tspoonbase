@@ -69,7 +69,8 @@ export function registerAgentRoutes(app: BaseApp, router: Router): void {
 
       const db = app.db().getDataDB()
       const now = new Date().toISOString()
-      const id = `wf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+      // FIXED[H-5]: Use crypto.randomBytes instead of Math.random()
+      const id = `wf_${Date.now().toString(36)}_${require('crypto').randomBytes(4).toString('hex')}`
       const version = body.version || body.config?.version || '1'
 
       const existing = db.prepare(`SELECT id FROM _agentWorkflows WHERE workflowId = ?`).get(workflowId) as any
@@ -199,17 +200,21 @@ export function registerAgentRoutes(app: BaseApp, router: Router): void {
         ...JSON.parse(row.definition),
       }
 
+      // FIXED[L-2]: Cap input size before JSON.parse to prevent DoS
+      const rawInput = req.query.input as string | undefined
+      const parsedInput = rawInput && rawInput.length < 65536 ? JSON.parse(rawInput) : undefined
+
       const engine = new WorkflowEngine({
         workflow: definition,
         trigger: 'api',
-        input: req.query.input ? JSON.parse(req.query.input as string) : undefined,
+        input: parsedInput,
         app,
         logger: (msg, data) => {
           res.write(`data: ${JSON.stringify({ type: 'log', message: msg, data })}\n\n`)
         },
       })
 
-      const result = await engine.execute(req.query.input ? JSON.parse(req.query.input as string) : undefined)
+      const result = await engine.execute(parsedInput)
       res.write(`data: ${JSON.stringify({ type: 'result', ...result })}\n\n`)
       res.end()
     } catch (err: any) {

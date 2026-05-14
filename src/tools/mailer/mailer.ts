@@ -46,8 +46,9 @@ export class Mailer {
         user: this.config.username,
         pass: this.config.password,
       } : undefined,
+      // FIXED[M-1]: Validate TLS certificates by default
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     })
 
