@@ -221,23 +221,15 @@ export async function findAuthRecordByToken(
   }
 }
 
-// FIXED[M-1]: Guarded against SQL injection — only allows single SELECT statements
+// FIXED[C-1]: Disabled — raw SQL execution bypasses all access controls
+// Use findAllRecords / findRecordsByFilter instead
 export async function findRecordsByRawQuery(
-  app: BaseApp,
-  collectionIdOrName: string,
-  rawQuery: string,
-  params: any[] = []
+  _app: BaseApp,
+  _collectionIdOrName: string,
+  _rawQuery: string,
+  _params: any[] = []
 ): Promise<PBRecord[]> {
-  const trimmed = rawQuery.trim().toLowerCase()
-  if (!trimmed.startsWith('select') || trimmed.includes(';')) {
-    throw new Error('Raw query must be a single SELECT statement')
-  }
-  const collection = await app.findCollectionByNameOrId(collectionIdOrName)
-  if (!collection) return []
-
-  const db = app.db().getDataDB()
-  const rows = db.prepare(rawQuery).all(...params) as any[]
-  return rows.map(row => new PBRecord(collection.id, collection.name, row))
+  throw new Error('findRecordsByRawQuery is disabled — use findAllRecords or findRecordsByFilter instead')
 }
 
 export async function deleteRecordById(

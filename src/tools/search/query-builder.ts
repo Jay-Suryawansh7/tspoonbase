@@ -2,6 +2,8 @@ import { FilterAST } from './filter'
 import { validateIdentifier } from '../../utils/sql_safe'
 
 const VALID_DIRECTIONS = new Set(['ASC', 'DESC'])
+// FIXED[M-4]: Reject sort expressions exceeding maximum safe length
+const MAX_FILTER_LENGTH = 4096
 
 export interface QueryBuilder {
   buildWhere(ast: FilterAST, paramOffset?: number): { where: string; params: any[] }
@@ -97,6 +99,9 @@ export class SqliteQueryBuilder implements QueryBuilder {
 
   buildSort(sort: string): string {
     if (!sort) return 'created DESC'
+    if (sort.length > MAX_FILTER_LENGTH) {
+      throw new Error(`sort expression exceeds maximum length of ${MAX_FILTER_LENGTH} characters`)
+    }
 
     const parts = sort.split(',').map(s => {
       const trimmed = s.trim()

@@ -762,12 +762,17 @@ export class BaseApp {
     return token
   }
 
+  private _logger?: any
+
+  // FIXED[L-4]: Cache logger instance to avoid per-call object creation
   logger(): any {
-    return {
+    if (this._logger) return this._logger
+    this._logger = {
       info: (msg: string, data?: any) => console.log(`[INFO] ${msg}`, data ?? ''),
       error: (msg: string, data?: any) => console.error(`[ERROR] ${msg}`, data ?? ''),
       warn: (msg: string, data?: any) => console.warn(`[WARN] ${msg}`, data ?? ''),
       debug: (msg: string, data?: any) => { if (this.isDev) console.debug(`[DEBUG] ${msg}`, data ?? '') },
     }
+    return this._logger
   }
 }

@@ -448,6 +448,17 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.14.0</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-14</p>
+            <h4 className="mt-3 text-sm font-semibold text-green-400">Performance &amp; Security Hardening</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li><strong>High:</strong> <code>LocalBlobDriver</code> converted to async <code>fs/promises</code> — no more event-loop blocking on file operations</li>
+              <li><strong>High:</strong> Settings encryption now uses async <code>crypto.scrypt</code> with in-memory key cache — no more event-loop blocking on settings load/save</li>
+              <li><strong>Medium:</strong> Workflow secrets deep-scrubbed recursively at all nesting levels</li>
+            </ul>
+            <p className="mt-2 text-xs text-theme-muted">Verified clean: SQL injection, XSS, CSRF, mass assignment, auth, rate limiting, error leakage, command injection, crypto.</p>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.13.0</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-14</p>
             <h4 className="mt-3 text-sm font-semibold text-red-400">Security Patch — 7 Findings</h4>

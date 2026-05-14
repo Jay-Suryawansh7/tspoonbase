@@ -82,9 +82,29 @@ Server started at http://localhost:${port}
 
     const httpServer = await serve(this, port)
 
+    // FIXED[M-3]: Periodic cleanup of expired auth tokens
+    const cleanupAuthTokens = async () => {
+      try {
+        const { deleteExpiredOTPs, deleteExpiredMFAs } = await import('./core/auth_queries.js')
+        await deleteExpiredOTPs(this)
+        await deleteExpiredMFAs(this)
+        const db = this.db().getDataDB()
+        const now = new Date().toISOString()
+        db.prepare(`DELETE FROM _passwordResetTokens WHERE expiresAt < ?`).run(now)
+        db.prepare(`DELETE FROM _oauth2States WHERE expiresAt < ?`).run(now)
+      } catch {}
+    }
+    // Run immediately on start, then every 30 minutes
+    cleanupAuthTokens()
+    const cleanupInterval = setInterval(cleanupAuthTokens, 30 * 60 * 1000)
+
+    // FIXED[L-2]: Await HTTP server drain with forced timeout
     const shutdown = async (signal: string) => {
       console.log(`\nReceived ${signal}, shutting down gracefully...`)
-      httpServer.close()
+      clearInterval(cleanupInterval)
+      const forceExit = setTimeout(() => process.exit(1), 10000)
+      await new Promise<void>(resolve => httpServer.close(() => resolve()))
+      clearTimeout(forceExit)
       try { this.db().getDataDB().exec('PRAGMA wal_checkpoint(TRUNCATE)') } catch {}
       try { this.db().getAuxDB().exec('PRAGMA wal_checkpoint(TRUNCATE)') } catch {}
       this.db().close()

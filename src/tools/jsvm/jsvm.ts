@@ -53,10 +53,11 @@ export class JSVM {
 
   private createContext(): vm.Context {
     const app = this.app
+    const crypto = require('crypto')
 
     const sandbox: any = {
+      // Standard JS globals (safe subset — no process, require, or child_process)
       console,
-      Buffer,
       setTimeout,
       clearTimeout,
       setInterval,
@@ -90,6 +91,17 @@ export class JSVM {
       Intl,
       URL,
       URLSearchParams,
+
+      // Narrow whitelist of Node APIs (no require, no raw fs, no child_process)
+      crypto: {
+        randomBytes: (size: number) => crypto.randomBytes(size),
+        randomInt: (min: number, max: number) => crypto.randomInt(min, max),
+        createHash: (algo: string) => crypto.createHash(algo),
+        createHmac: (algo: string, key: string) => crypto.createHmac(algo, key),
+        timingSafeEqual: (a: Buffer, b: Buffer) => crypto.timingSafeEqual(a, b),
+      },
+      fetch: globalThis.fetch.bind(globalThis),
+
       // TspoonBase globals
       $app: this.createAppProxy(),
       $apis: {

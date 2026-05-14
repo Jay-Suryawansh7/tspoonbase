@@ -13,9 +13,15 @@ export interface FilterAST {
   value?: any
 }
 
+// FIXED[M-4]: Reject filter expressions exceeding maximum safe length
+const MAX_FILTER_LENGTH = 4096
+
 export function parseFilter(filter: string): FilterAST {
   if (!filter || !filter.trim()) {
     return { type: 'group', op: 'AND', expressions: [] }
+  }
+  if (filter.length > MAX_FILTER_LENGTH) {
+    throw new Error(`filter expression exceeds maximum length of ${MAX_FILTER_LENGTH} characters`)
   }
   const tokens = tokenize(filter)
   const { ast } = parseExpression(tokens, 0)

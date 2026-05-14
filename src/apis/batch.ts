@@ -232,17 +232,12 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
             return true
           }
         }
-        const data: any = { collectionId: collection.id, collectionName: collection.name }
-        for (const [key, value] of Object.entries(req.body)) {
-          if (!['password', 'passwordConfirm', 'oldPassword', 'newPassword', 'newPasswordConfirm'].includes(key)) {
-            data[key] = value
-          }
-        }
-        const record = new RecordModel(collection.id, collection.name, data)
-        if (collection.isAuth() && req.body.password) {
-          record.set('passwordHash', await app.hashPassword(req.body.password))
-          record.set('emailVisibility', req.body.emailVisibility ?? true)
-          record.set('verified', req.body.verified ?? false)
+        // FIXED[H-2]: Route through validateAndCreateRecord for proper field whitelisting
+        const { validateAndCreateRecord } = await import('../core/record_upsert.js')
+        const { record, errors } = await validateAndCreateRecord(app, collection, req.body)
+        if (errors.length > 0) {
+          res.status(400).json({ code: 400, message: 'Validation failed.', data: errors })
+          return true
         }
         await app.save(record)
         const enriched = await enrichRecord(app, collection, record, { requestInfo })
@@ -272,16 +267,15 @@ async function routeBatchRequest(app: BaseApp, req: any, res: any, path: string)
             return true
           }
         }
-        for (const [key, value] of Object.entries(req.body)) {
-          if (!['password', 'passwordConfirm', 'oldPassword', 'newPassword', 'newPasswordConfirm'].includes(key)) {
-            record.set(key, value)
-          }
+        // FIXED[H-2]: Route through validateAndUpdateRecord for proper field whitelisting
+        const { validateAndUpdateRecord } = await import('../core/record_upsert.js')
+        const { record: updatedRecord, errors } = await validateAndUpdateRecord(app, collection, record, req.body)
+        if (errors.length > 0) {
+          res.status(400).json({ code: 400, message: 'Validation failed.', data: errors })
+          return true
         }
-        if (req.body.password) {
-          record.set('passwordHash', await app.hashPassword(req.body.password))
-        }
-        await app.save(record)
-        const enriched = await enrichRecord(app, collection, record, { requestInfo })
+        await app.save(updatedRecord)
+        const enriched = await enrichRecord(app, collection, updatedRecord, { requestInfo })
         res.json(enriched.toJSON())
         return true
       }

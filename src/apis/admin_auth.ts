@@ -11,8 +11,11 @@ const adminAuthRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  // FIXED[H-1]: Compound key includes IP to prevent identity cycling
   keyGenerator: (req: Request): string => {
-    return req.body?.identity || req.ip || 'unknown'
+    const ip = req.ip || req.socket.remoteAddress || 'unknown'
+    const identity = req.body?.identity || 'unknown'
+    return `${ip}:${identity}`
   },
   message: { code: 429, message: 'Too many authentication attempts, please try again later.' },
   handler: (req: Request, res: Response) => {

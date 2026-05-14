@@ -149,25 +149,55 @@ registerNode({
   },
 })
 
+// FIXED[H-3]: Block SSRF — reject private/loopback IPs and check URL well-formedness
+function isPrivateHostname(hostname: string): boolean {
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]') return true
+  if (hostname.startsWith('127.') || hostname === '0.0.0.0') return true
+  if (hostname.startsWith('10.') || hostname.startsWith('192.168.')) return true
+  if (hostname.startsWith('169.254.')) return true
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return true
+  // IPv6 loopback and unique-local
+  if (hostname.startsWith('fc') || hostname.startsWith('fd') || hostname.toLowerCase() === '::1') return true
+  return false
+}
+
 registerNode({
   type: 'http_request',
   label: 'HTTP Request',
-  description: 'Make an HTTP request to any URL',
+  description: 'Make an HTTP request to an external URL (private/loopback blocked)',
   category: 'action',
   execute: async (config, input, ctx) => {
     if (ctx.abortSignal?.aborted) return makeResult(ctx.executionId, 'http_request', null, 'error', 'Execution aborted')
-    const url = config.url
-    if (!url) return makeResult(ctx.executionId, 'http_request', null, 'error', 'URL is required')
+    const urlStr = config.url
+    if (!urlStr) return makeResult(ctx.executionId, 'http_request', null, 'error', 'URL is required')
+
+    let parsed: URL
+    try { parsed = new URL(urlStr) } catch {
+      return makeResult(ctx.executionId, 'http_request', null, 'error', 'Invalid URL')
+    }
+
+    if (isPrivateHostname(parsed.hostname)) {
+      return makeResult(ctx.executionId, 'http_request', null, 'error', 'Requests to private/loopback addresses are blocked')
+    }
+
+    // Check allowlist if configured
+    const allowedPrefixes = process.env.ALLOWED_URL_PREFIXES
+    if (allowedPrefixes) {
+      const prefixes = allowedPrefixes.split(',').map(s => s.trim()).filter(Boolean)
+      if (prefixes.length > 0 && !prefixes.some(p => urlStr.startsWith(p))) {
+        return makeResult(ctx.executionId, 'http_request', null, 'error', 'URL does not match ALLOWED_URL_PREFIXES')
+      }
+    }
 
     const method = config.method || 'GET'
     const headers = config.headers || {}
     const body = config.body || (method !== 'GET' ? JSON.stringify(input) : undefined)
 
-    ctx.logger(`HTTP ${method} ${url}`)
+    ctx.logger(`HTTP ${method} ${parsed.origin}`)
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 30000)
     try {
-      const res = await fetch(url, { method, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...(headers as Record<string, string>) }, body: body as string | undefined })
+      const res = await fetch(urlStr, { method, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...(headers as Record<string, string>) }, body: body as string | undefined })
       const text = await res.text()
       let data: any = text
       try { data = JSON.parse(text) } catch {}

@@ -7,7 +7,11 @@ import { WorkflowEngine } from '../agent/workflow-engine'
 import { WorkflowDefinition } from '../agent/types'
 
 // FIXED[M-1]: Deep-scrub secrets at all nesting levels in an object tree
-const DEEP_SCRUB_KEYS = new Set(['apiKey', 'api_key', 'password', 'secret', 'token', 'authorization', 'auth'])
+// FIXED[H-4]: Extended secret patterns to cover passwordHash, mfaSecret, and all token variants
+const DEEP_SCRUB_KEYS = new Set([
+  'apiKey', 'api_key', 'password', 'passwordHash', 'password_hash', 'mfaSecret', 'mfa_secret',
+  'secret', 'token', 'refreshToken', 'accessToken', 'authorization', 'auth',
+])
 
 function deepScrub(obj: any, secretKeys: Set<string>): void {
   if (typeof obj !== 'object' || obj === null) return
@@ -173,11 +177,17 @@ export function registerAgentRoutes(app: BaseApp, router: Router): void {
 
       const executionId = result.executionId
       const now = new Date().toISOString()
-      // FIXED[M-1]: Scrub secrets from input before persisting to execution history
+      // FIXED[H-4]: Scrub secrets from input, output, and results before persisting
       const safeInput = req.body?.input ? JSON.parse(JSON.stringify(req.body.input)) : {}
       deepScrub(safeInput, DEEP_SCRUB_KEYS)
+      const safeOutput = result.results[result.results.length - 1]?.output
+        ? JSON.parse(JSON.stringify(result.results[result.results.length - 1].output))
+        : null
+      if (safeOutput) deepScrub(safeOutput, DEEP_SCRUB_KEYS)
+      const safeResults = JSON.parse(JSON.stringify(result.results))
+      safeResults.forEach((r: any) => { if (r.output) deepScrub(r.output, DEEP_SCRUB_KEYS) })
       db.prepare(`INSERT INTO _agentExecutions (id, workflowId, status, trigger, input, output, results, duration, error, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(executionId, row.workflowId, result.status, 'api', JSON.stringify(safeInput), JSON.stringify(result.results[result.results.length - 1]?.output || null), JSON.stringify(result.results), result.duration || 0, result.error || '', now)
+        .run(executionId, row.workflowId, result.status, 'api', JSON.stringify(safeInput), JSON.stringify(safeOutput), JSON.stringify(safeResults), result.duration || 0, result.error || '', now)
 
       // Cleanup old execution records (keep last 1000 per workflow)
       db.prepare(`DELETE FROM _agentExecutions WHERE workflowId = ? AND id NOT IN (SELECT id FROM _agentExecutions WHERE workflowId = ? ORDER BY created DESC LIMIT 1000)`).run(row.workflowId, row.workflowId)
@@ -248,7 +258,14 @@ export function registerAgentRoutes(app: BaseApp, router: Router): void {
       const db = app.db().getDataDB()
       const row = db.prepare(`SELECT * FROM _agentExecutions WHERE id = ?`).get(req.params.executionId) as any
       if (!row) return res.status(404).json({ code: 404, message: 'Execution not found' })
-      res.json({ code: 200, data: { ...row, input: JSON.parse(row.input), output: JSON.parse(row.output), results: JSON.parse(row.results) } })
+      const data: any = { ...row, input: JSON.parse(row.input), output: JSON.parse(row.output), results: JSON.parse(row.results) }
+      // FIXED[H-4]: Scrub secrets from execution details for non-superuser callers
+      if (!req.authContext?.isAdmin) {
+        deepScrub(data.input, DEEP_SCRUB_KEYS)
+        if (data.output) deepScrub(data.output, DEEP_SCRUB_KEYS)
+        if (Array.isArray(data.results)) data.results.forEach((r: any) => { if (r.output) deepScrub(r.output, DEEP_SCRUB_KEYS) })
+      }
+      res.json({ code: 200, data })
     } catch (err: any) {
       app.logger().error(err.message || err)
       res.status(500).json({ code: 500, message: 'Internal server error' })

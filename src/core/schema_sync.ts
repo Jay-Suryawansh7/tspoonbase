@@ -235,7 +235,7 @@ async function syncIndexes(app: BaseApp, collection: Collection): Promise<void> 
   const existingIndexNames = new Set(existingIndexes.map(i => i.name))
 
   // Create indexes from collection definition
-  for (const indexDef of collection.indexes) {
+      for (const indexDef of collection.indexes) {
     const indexName = `idx_${collection.id}_${createHash('md5').update(indexDef).digest('hex').slice(0, 8)}`
     if (!existingIndexNames.has(indexName)) {
       try {
@@ -254,6 +254,10 @@ async function syncIndexes(app: BaseApp, collection: Collection): Promise<void> 
             throw new Error(`Invalid sort direction "${direction}" in index field "${f}"`)
           }
           validateIdentifier(fieldName, 'index field name')
+          // FIXED[L-1]: Reject indexes referencing fields not present in collection schema
+          if (!collection.fields.find(cf => cf.name === fieldName) && !['id', 'created', 'updated', 'collectionId', 'collectionName'].includes(fieldName)) {
+            throw new Error(`Index field "${fieldName}" does not exist in collection "${collection.name}"`)
+          }
           return direction ? `${fieldName} ${direction}` : fieldName
         })
         db.exec(`CREATE INDEX IF NOT EXISTS ${indexName} ON ${tableName} (${validatedFields.join(', ')})`)

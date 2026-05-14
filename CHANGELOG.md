@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.14.0 — Security Audit Remediation (2026-05-14)
+
+### Critical
+- **C-1:** Disabled `findRecordsByRawQuery` unconditionally — raw SQL execution bypassed all access controls
+- **C-2:** Removed `require` from JSVM hook sandbox; replaced with narrow whitelisted API (`crypto`, `fetch`, console, `$app` proxy)
+
+### High
+- **H-1:** Fixed rate limiter key generator in `record_auth` and `admin_auth` to use compound IP+identity key — prevents identity-cycling brute-force bypass
+- **H-2:** Routed batch POST/PATCH sub-requests through `validateAndCreateRecord`/`validateAndUpdateRecord` — closes `passwordHash` and protected-field bypass
+- **H-3:** Added URL validation, private IP blocking, and configurable `ALLOWED_URL_PREFIXES` allowlist to agent `http_request` node — closes SSRF vector
+- **H-4:** Extended `deepScrub` to cover node output/results in agent execution history; scrub execution details for non-superuser callers; extended secret key patterns
+
+### Medium
+- **M-1:** Batch mutations now route through `RecordUpsertForm` pipeline (covered by H-2)
+- **M-2:** Replaced unbounded lockout Map with LRU-evictable cache capped at 50K entries with 10-minute sweep interval
+- **M-3:** Added `setInterval` cleanup every 30 minutes for expired OTPs, MFAs, password-reset tokens, and OAuth2 states
+- **M-4:** Added `MAX_FILTER_LENGTH = 4096` guard in `parseFilter()` and `buildSort()` to prevent CPU-based DoS via oversized expressions
+- **M-5:** Added `validateIdentifier()` guards to all public `db.ts` methods (`tableColumns`, `tableInfo`, `tableIndexes`, `deleteTable`, `deleteView`, `saveView`)
+
+### Low
+- **L-1:** Index definitions now cross-referenced against collection field names — blocks indexes referencing non-existent columns
+- **L-2:** HTTP server drain now awaited with 10s forced-exit fallback — prevents in-flight request drops during shutdown
+- **L-3:** `sanitizeFilename` now uses `path.basename()` before character filtering — eliminates path traversal by definition
+- **L-4:** Logger instance now cached on first call — eliminates per-call object creation and GC pressure
+
+### Verified Clean
+This audit round confirmed the following areas are free of findings: SQL injection (all identifier paths validated, all values parameterized), XSS (no HTML rendering), CSRF (Bearer token auth, Content-Security-Policy), mass assignment (field whitelists on all write paths), auth (all sensitive endpoints gated), rate limiting (enabled by default, compound IP+identity keys on auth endpoints), error leakage (all errors logged server-side only), command injection (zero child_process usage), crypto (bcrypt, AES-256-CBC, per-encryption salt, timing-safe OTP comparison, no Math.random), SSRF (private IP blocking on http_request node), open redirects (OAuth2 redirect validated against appURL origin), path traversal (assertPathSafe + path.basename sanitizer), WebSocket auth (JWT validated on connect), CORS (no wildcard-with-credentials).
+
 ## v0.13.1 — Performance & Security Hardening (2026-05-14)
 
 ### High
