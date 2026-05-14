@@ -4,14 +4,9 @@ import { BaseApp } from '../core/base'
 import { requireSuperuserAuth } from './middlewares_auth'
 import path from 'path'
 import fs from 'fs'
+import fsPromises from 'fs/promises'
 
 const BACKUP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024
-
-function createBackupDir(app: BaseApp): string {
-  const backupDir = path.join(app.dataDir, 'backups')
-  fs.mkdirSync(backupDir, { recursive: true })
-  return backupDir
-}
 
 function checkpointWalIfPossible(app: BaseApp): void {
   try {
@@ -22,26 +17,41 @@ function checkpointWalIfPossible(app: BaseApp): void {
   }
 }
 
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fsPromises.access(filePath)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function registerBackupRoutes(app: BaseApp, router: Router): void {
-  const backupDir = createBackupDir(app)
+  // One-time synchronous creation is acceptable (startup cost, not request-path)
+  const backupDir = (() => {
+    const dir = path.join(app.dataDir, 'backups')
+    fs.mkdirSync(dir, { recursive: true })
+    return dir
+  })()
 
   router.get('/api/backups', requireSuperuserAuth(app), async (_req: Request, res: Response) => {
     try {
-      if (!fs.existsSync(backupDir)) {
+      if (!await pathExists(backupDir)) {
         return res.json([])
       }
 
-      const files = fs.readdirSync(backupDir)
-        .filter(f => f.endsWith('.zip'))
-        .map((file: string) => {
-          const stat = fs.statSync(path.join(backupDir, file))
-          return {
-            key: file,
-            size: stat.size,
-            modified: stat.mtime.toISOString(),
-          }
-        })
-        .sort((a: any, b: any) => b.modified.localeCompare(a.modified))
+      // FIXED[H-2]: Use async fs/promises
+      const entries = await fsPromises.readdir(backupDir)
+      const zipFiles = entries.filter(f => f.endsWith('.zip'))
+      const files = await Promise.all(zipFiles.map(async (file: string) => {
+        const stat = await fsPromises.stat(path.join(backupDir, file))
+        return {
+          key: file,
+          size: stat.size,
+          modified: stat.mtime.toISOString(),
+        }
+      }))
+      files.sort((a: any, b: any) => b.modified.localeCompare(a.modified))
 
       res.json(files)
     } catch (err: any) {
@@ -59,7 +69,8 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
       const backupName = sanitized.endsWith('.zip') ? sanitized : `${sanitized}.zip`
       const backupPath = path.join(backupDir, backupName)
 
-      if (fs.existsSync(backupPath)) {
+      // FIXED[H-2]: Use async fs/promises
+      if (await pathExists(backupPath)) {
         return res.status(409).json({ code: 409, message: `Backup "${backupName}" already exists` })
       }
 
@@ -71,30 +82,31 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
       const dbFiles = ['data.db', 'auxiliary.db']
       for (const dbFile of dbFiles) {
         const dbPath = path.join(app.dataDir, dbFile)
-        if (fs.existsSync(dbPath)) {
-          zip.file(dbFile, fs.readFileSync(dbPath))
+        if (await pathExists(dbPath)) {
+          zip.file(dbFile, await fsPromises.readFile(dbPath))
         }
       }
 
       const storageDir = path.join(app.dataDir, 'storage')
-      if (fs.existsSync(storageDir)) {
-        const addDirToZip = (dirPath: string, zipPath: string) => {
-          const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+      // FIXED[H-2]: Use async fs/promises
+      if (await pathExists(storageDir)) {
+        const addDirToZip = async (dirPath: string, zipPath: string) => {
+          const entries = await fsPromises.readdir(dirPath, { withFileTypes: true })
           for (const entry of entries) {
             const fullPath = path.join(dirPath, entry.name)
             const zipEntryPath = zipPath ? `${zipPath}/${entry.name}` : entry.name
             if (entry.isDirectory()) {
-              addDirToZip(fullPath, zipEntryPath)
+              await addDirToZip(fullPath, zipEntryPath)
             } else {
-              zip.file(`storage/${zipEntryPath}`, fs.readFileSync(fullPath))
+              zip.file(`storage/${zipEntryPath}`, await fsPromises.readFile(fullPath))
             }
           }
         }
-        addDirToZip(storageDir, '')
+        await addDirToZip(storageDir, '')
       }
 
       const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
-      fs.writeFileSync(backupPath, zipBuffer)
+      await fsPromises.writeFile(backupPath, zipBuffer)
 
       try {
         await app.onBackupCreate.trigger({ app, name: backupName })
@@ -102,7 +114,7 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
         // hook errors should not block the response
       }
 
-      const stat = fs.statSync(backupPath)
+      const stat = await fsPromises.stat(backupPath)
       res.json({
         code: 200,
         data: {
@@ -132,14 +144,15 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
       const sanitized = originalName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.\./g, '_')
       const targetPath = path.join(backupDir, sanitized)
 
-      if (fs.existsSync(targetPath)) {
-        fs.unlinkSync(req.file.path)
+      // FIXED[H-2]: Use async fs/promises
+      if (await pathExists(targetPath)) {
+        await fsPromises.unlink(req.file.path)
         return res.status(409).json({ code: 409, message: `Backup "${sanitized}" already exists` })
       }
 
-      fs.renameSync(req.file.path, targetPath)
+      await fsPromises.rename(req.file.path, targetPath)
 
-      const stat = fs.statSync(targetPath)
+      const stat = await fsPromises.stat(targetPath)
       res.json({
         code: 200,
         data: {
@@ -149,8 +162,8 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
         },
       })
     } catch (err: any) {
-      if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path)
+      if (req.file && await pathExists(req.file.path)) {
+        await fsPromises.unlink(req.file.path)
       }
       app.logger().error(err.message || err)
       res.status(500).json({ code: 500, message: 'Internal server error' })
@@ -162,12 +175,13 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
       const backupKey = path.basename(req.params.key).replace(/\.\./g, '')
       const backupPath = path.join(backupDir, backupKey)
 
-      if (!fs.existsSync(backupPath)) {
+      // FIXED[H-2]: Use async fs/promises
+      if (!await pathExists(backupPath)) {
         return res.status(404).json({ code: 404, message: `Backup "${backupKey}" not found` })
       }
 
       const JSZip = require('jszip')
-      const zipData = fs.readFileSync(backupPath)
+      const zipData = await fsPromises.readFile(backupPath)
       const zip = await JSZip.loadAsync(zipData)
 
       app.db().getDataDB().exec('PRAGMA wal_checkpoint(TRUNCATE)')
@@ -175,10 +189,11 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
       app.resetBootstrapState()
 
       const restoreDir = path.join(app.dataDir, '.restore_temp')
-      if (fs.existsSync(restoreDir)) {
-        fs.rmSync(restoreDir, { recursive: true })
+      // FIXED[H-2]: Use async fs/promises
+      if (await pathExists(restoreDir)) {
+        await fsPromises.rm(restoreDir, { recursive: true })
       }
-      fs.mkdirSync(restoreDir, { recursive: true })
+      await fsPromises.mkdir(restoreDir, { recursive: true })
 
       const zipEntries = Object.entries(zip.files) as [string, any][]
       for (const [zipPath, zipEntry] of zipEntries) {
@@ -190,35 +205,35 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
         if (!resolved.startsWith(base + path.sep)) {
           throw new Error(`Zip slip detected: entry "${zipPath}" would escape restore directory`)
         }
-        fs.mkdirSync(path.dirname(targetFile), { recursive: true })
+        await fsPromises.mkdir(path.dirname(targetFile), { recursive: true })
         const content = await zipEntry.async('nodebuffer')
-        fs.writeFileSync(targetFile, content)
+        await fsPromises.writeFile(targetFile, content)
       }
 
       const restoreDbFiles = ['data.db', 'auxiliary.db']
       for (const dbFile of restoreDbFiles) {
         const src = path.join(restoreDir, dbFile)
         const dst = path.join(app.dataDir, dbFile)
-        if (fs.existsSync(src)) {
+        if (await pathExists(src)) {
           const walFile = `${dst}-wal`
           const shmFile = `${dst}-shm`
-          if (fs.existsSync(walFile)) fs.unlinkSync(walFile)
-          if (fs.existsSync(shmFile)) fs.unlinkSync(shmFile)
-          fs.copyFileSync(src, dst)
+          if (await pathExists(walFile)) await fsPromises.unlink(walFile)
+          if (await pathExists(shmFile)) await fsPromises.unlink(shmFile)
+          await fsPromises.copyFile(src, dst)
         }
       }
 
       const restoreStorageDir = path.join(restoreDir, 'storage')
       const appStorageDir = path.join(app.dataDir, 'storage')
-      if (fs.existsSync(restoreStorageDir)) {
-        if (fs.existsSync(appStorageDir)) {
-          fs.rmSync(appStorageDir, { recursive: true })
+      if (await pathExists(restoreStorageDir)) {
+        if (await pathExists(appStorageDir)) {
+          await fsPromises.rm(appStorageDir, { recursive: true })
         }
-        fs.mkdirSync(path.dirname(appStorageDir), { recursive: true })
-        fs.cpSync(restoreStorageDir, appStorageDir, { recursive: true })
+        await fsPromises.mkdir(path.dirname(appStorageDir), { recursive: true })
+        await fsPromises.cp(restoreStorageDir, appStorageDir, { recursive: true })
       }
 
-      fs.rmSync(restoreDir, { recursive: true })
+      await fsPromises.rm(restoreDir, { recursive: true })
 
       await app.bootstrap()
 
@@ -240,11 +255,12 @@ export function registerBackupRoutes(app: BaseApp, router: Router): void {
       const backupKey = path.basename(req.params.key).replace(/\.\./g, '')
       const backupPath = path.join(backupDir, backupKey)
 
-      if (!fs.existsSync(backupPath)) {
+      // FIXED[H-2]: Use async fs/promises
+      if (!await pathExists(backupPath)) {
         return res.status(404).json({ code: 404, message: `Backup "${backupKey}" not found` })
       }
 
-      fs.unlinkSync(backupPath)
+      await fsPromises.unlink(backupPath)
       res.status(204).send()
     } catch (err: any) {
       app.logger().error(err.message || err)

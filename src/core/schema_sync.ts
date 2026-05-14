@@ -99,6 +99,16 @@ async function syncViewCollection(app: BaseApp, collection: Collection): Promise
 
   const query = collection.viewOptions?.query
   if (query) {
+    // FIXED[C-2]: Strip string literals before checking for semicolons to prevent multi-statement injection
+    function stripStringLiterals(q: string): string {
+      return q.replace(/'(?:[^'\\]|\\.)*'/g, '').replace(/"(?:[^"\\]|\\.)*"/g, '')
+    }
+    const strippedQuery = stripStringLiterals(query)
+    if (/;/.test(strippedQuery)) {
+      app.logger().error(`Multi-statement view query rejected for ${viewName}`, 'View query must be a single SELECT statement')
+      return { changed: false, addedColumns: [], removedColumns: [], modifiedColumns: [] }
+    }
+
     // FIXED[H-4]: Use EXPLAIN to validate that query is a pure SELECT
     // The EXPLAIN approach is the definitive check — it will tell us whether the
     // query engine interprets this as a single SELECT statement or something else
@@ -175,6 +185,8 @@ function buildExpectedColumns(collection: Collection): Record<string, string> {
   }
 
   for (const field of collection.fields) {
+    // FIXED[C-1]: Defense-in-depth — validate field name before it reaches DDL
+    validateIdentifier(field.name, 'field name')
     columns[field.name] = getSQLiteType(field)
   }
 

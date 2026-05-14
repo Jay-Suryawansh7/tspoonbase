@@ -1,3 +1,5 @@
+import { validateIdentifier } from '../utils/sql_safe'
+
 export interface FieldData {
   id: string
   name: string
@@ -20,6 +22,8 @@ export abstract class Field {
   constructor(data?: Partial<FieldData>) {
     this.id = data?.id ?? generateFieldId()
     this.name = data?.name ?? ''
+    // FIXED[C-1]/[M-1]: Field names flow into DDL — validate at construction to prevent SQL injection
+    validateIdentifier(this.name, 'field name')
     this.type = data?.type ?? 'text'
     this.system = data?.system ?? false
     this.required = data?.required ?? false

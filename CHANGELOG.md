@@ -1,6 +1,23 @@
 # Changelog
 
-## v0.12.1 — Security Patch (2025-05-14)
+## v0.13.0 — Security Patch (2026-05-14)
+
+### Critical
+- **C-1:** Added `validateIdentifier` to `Field` constructor and `buildExpectedColumns` — closes SQL injection via field names in DDL (CREATE TABLE, ALTER TABLE)
+- **C-2:** Added semicolon guard with string-literal stripping before EXPLAIN view-query validation — prevents multi-statement injection bypass
+
+### High
+- **H-1:** Re-validate collection name and field names after `Object.assign` on PATCH — prevents path traversal and SQL injection from bypassed constructor validation
+- **H-2:** Converted all backup endpoints (list, create, upload, restore, delete) from sync `fs.*` to async `fs/promises` — prevents event-loop blocking during backup operations
+
+### Medium
+- **M-1:** Covered by C-1 Field constructor fix — `validateIdentifier` rejects invalid field names at construction time
+
+### Low
+- **L-1:** Covered by H-1 — `validateIdentifier` on PATCH prevents invalid collection names from reaching DB and crashing bootstrap
+- **L-2:** Added per-field name validation in collection import endpoint — rejects invalid field names before collection creation
+
+## v0.12.1 — Security Patch (2026-05-14)
 
 ### High
 - **H-1:** Replaced `err.message` with generic `'Internal server error'` in all API catch blocks (71 instances across 16 files) — full errors logged server-side only

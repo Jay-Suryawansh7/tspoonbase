@@ -448,6 +448,23 @@ export default defineCollection({
       <DocSection id="changelog" title="Changelog">
         <div className="space-y-6">
           <div className="rounded-lg border border-theme bg-theme-surface p-4">
+            <h3 className="font-heading text-lg font-bold text-theme">v0.12.1</h3>
+            <p className="mt-1 text-xs text-theme-muted">2026-05-14</p>
+            <h4 className="mt-3 text-sm font-semibold text-red-400">Security Patch — 11 Findings</h4>
+            <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-theme-secondary">
+              <li><strong>High:</strong> Error messages sanitized — internal details no longer leaked in API responses</li>
+              <li><strong>High:</strong> Rate limiting added to password reset, verification, email change, OAuth2, and admin refresh endpoints</li>
+              <li><strong>High:</strong> View query validation replaced with EXPLAIN-based opcode analysis</li>
+              <li><strong>Medium:</strong> <code>findRecordsByRawQuery</code> now only accepts single SELECT statements</li>
+              <li><strong>Medium:</strong> Bcrypt work factor clamped to [10, 12] to prevent DoS</li>
+              <li><strong>Medium:</strong> Superuser IDs use <code>crypto.randomBytes</code> instead of <code>Date.now()</code></li>
+              <li><strong>Medium:</strong> CLI password input is now masked</li>
+              <li><strong>Low:</strong> <code>Referrer-Policy: no-referrer</code> set on password reset responses</li>
+              <li><strong>Low:</strong> Consistent <code>validateIdentifier</code> used in vector search</li>
+              <li><strong>Low:</strong> Automated backup uses async <code>fs/promises</code></li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-theme bg-theme-surface p-4">
             <h3 className="font-heading text-lg font-bold text-theme">v0.12.0</h3>
             <p className="mt-1 text-xs text-theme-muted">2026-05-14</p>
             <h4 className="mt-3 text-sm font-semibold text-red-400">Security Patch — 22 Findings</h4>

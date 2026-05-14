@@ -71,3 +71,4 @@ torque/.next/
 torque/out/
 torque/next-env.d.ts
 torque/node_modules/
+.qa

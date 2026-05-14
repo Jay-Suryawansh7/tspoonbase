@@ -3,6 +3,7 @@ import { BaseApp } from '../core/base'
 import { Collection } from '../core/collection'
 import { syncRecordTableSchema, createRecordTable } from '../core/schema_sync'
 import { requireSuperuserAuth } from './middlewares_auth'
+import { validateIdentifier } from '../utils/sql_safe'
 
 const COLLECTION_WRITABLE_FIELDS = new Set([
   'name', 'type', 'system', 'listRule', 'viewRule', 'createRule', 'updateRule',
@@ -77,6 +78,11 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
 
       const picked = pickCollectionFields(req.body)
       Object.assign(collection, picked)
+      // FIXED[H-1]/[L-1]: Re-validate after Object.assign bypasses constructor validation
+      validateIdentifier(collection.name, 'collection name')
+      for (const field of collection.fields) {
+        validateIdentifier(field.name, 'field name')
+      }
       await app.save(collection)
 
       // Sync schema after update
@@ -121,6 +127,17 @@ export function registerCollectionRoutes(app: BaseApp, router: Router): void {
         }
         if (!Array.isArray(colData.fields)) {
           return res.status(400).json({ code: 400, message: `Collection "${colData.name}" must have a "fields" array.` })
+        }
+        // FIXED[L-2]: Validate individual field names to prevent SQL injection via DDL in import
+        for (const field of colData.fields) {
+          if (typeof field.name !== 'string') {
+            return res.status(400).json({ code: 400, message: `Collection "${colData.name}" has a field without a valid name.` })
+          }
+          try {
+            validateIdentifier(field.name, 'field name')
+          } catch {
+            return res.status(400).json({ code: 400, message: `Collection "${colData.name}" has invalid field name: "${field.name}".` })
+          }
         }
         const existing = await app.findCollectionByNameOrId(colData.name)
         if (existing) {

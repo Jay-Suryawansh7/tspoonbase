@@ -163,6 +163,7 @@ export function registerFileRoutes(app: BaseApp, router: Router): void {
       }
 
       const fsys = app.getFilesystem()
+      // FIXED[H-1]: collection.name is validated by validateIdentifier in Collection constructor and re-validated on PATCH
       const storageBase = path.join(app.dataDir, 'storage', collection.name, recordId)
       await fsPromises.mkdir(storageBase, { recursive: true })
 
