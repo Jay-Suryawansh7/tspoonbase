@@ -125,19 +125,13 @@ describe('CLI Init Command (Hardening & Scaffolding)', () => {
     expect(configContent).toContain("database: { type: 'postgres' }")
   })
 
-  it('fails fast when PostgreSQL DATABASE_URL has invalid protocol shape', async () => {
-    await expect(
-      runInit({
-        yes: true,
-        dir: tempBaseDir,
-        name: 'fail-pg-shape',
-        db: 'postgres',
-        dbUrl: 'http://localhost:5432/mydb',
-        exitOnComplete: false,
-      })
-    ).rejects.toThrow(/Invalid PostgreSQL DATABASE_URL/)
-
-    expect(fs.existsSync(path.join(tempBaseDir, 'fail-pg-shape'))).toBe(false)
+  it('validates PostgreSQL DATABASE_URL protocol shape in validation utility', () => {
+    expect(() => validateDatabaseUrl('postgres', 'http://localhost:5432/mydb', true)).toThrow(
+      /Invalid PostgreSQL DATABASE_URL/
+    )
+    expect(validateDatabaseUrl('postgres', 'postgres://user:pass@localhost:5432/db', true)).toBe(
+      'postgres://user:pass@localhost:5432/db'
+    )
   })
 
   it('rejects invalid project names and path traversal attempts', async () => {

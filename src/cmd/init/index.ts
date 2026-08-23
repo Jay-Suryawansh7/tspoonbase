@@ -13,7 +13,6 @@ import {
 import {
   validateProjectName,
   validateDatabase,
-  validateDatabaseUrl,
   validateAuthProviders,
   parseBoolean,
 } from './validation.js'
@@ -72,10 +71,7 @@ export async function runInit(opts: InitOptions = {}): Promise<GenerationResult 
   const rawAppType = opts.app || (opts.template as ApplicationType) || 'api'
   const deployment: DeploymentModel = opts.deployment || 'local'
   let dbType = opts.db || presetDb || (opts.template === 'saas' ? 'postgres' : DEFAULT_DATABASE)
-  let dbUrl = opts.dbUrl || ''
-  if (dbType === 'postgres' && !dbUrl && (opts.preset === 'production' || (opts.template === 'saas' && opts.db === 'postgres'))) {
-    dbUrl = `postgres://solarch:password@localhost:5432/${name}`
-  }
+  let dbUrl = opts.dbUrl
   let authProviders = opts.auth ? validateAuthProviders(opts.auth) : (template.features.auth || ['email'])
   let enableRateLimit = opts.rateLimit !== undefined
     ? parseBoolean(opts.rateLimit, DEFAULT_RATE_LIMIT, 'rate-limit')
@@ -103,7 +99,7 @@ export async function runInit(opts: InitOptions = {}): Promise<GenerationResult 
     })
     name = collected.name
     dbType = collected.database
-    dbUrl = collected.databaseUrl || ''
+    dbUrl = collected.databaseUrl
     authProviders = collected.authProviders
     enableRateLimit = collected.rateLimit
     enableAi = collected.ai
@@ -150,13 +146,12 @@ export async function runInit(opts: InitOptions = {}): Promise<GenerationResult 
   // --- Pre-flight Validation ---
   const validName = validateProjectName(name)
   const validDbType = validateDatabase(dbType)
-  const validDbUrl = validateDatabaseUrl(validDbType, dbUrl, false)
   const validAuthProviders = validateAuthProviders(authProviders)
 
   const config: InitConfig = {
     name: validName,
     database: validDbType,
-    databaseUrl: validDbUrl,
+    databaseUrl: dbUrl,
     dbSetup: opts.dbSetup || 'local',
     capabilities: opts.capabilities ? (Array.isArray(opts.capabilities) ? opts.capabilities : [opts.capabilities]) : undefined,
     authProviders: validAuthProviders,

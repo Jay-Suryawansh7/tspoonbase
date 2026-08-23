@@ -421,7 +421,7 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
   return {
     name,
     database: databaseEngine,
-    databaseUrl: '',
+    databaseUrl: undefined,
     dbSetup,
     capabilities: selectedCapabilities,
     authProviders: hasAuthCapability ? (template.features?.auth || ['email']) : [],
