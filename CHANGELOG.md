@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.20.2 — Complete DATABASE_URL Decoupling & Prompt Invariant Hardening (2026-08-23)
+
+Maintenance and security cleanup release strictly decoupling `DATABASE_URL` from interactive prompts and initialization pre-flight validation.
+
+### Fixed & Enhanced
+- **Decoupled `databaseUrl` from Interactive Prompt Returns**:
+  - `promptInit` now explicitly sets `databaseUrl: undefined` across all interactive flows, ensuring zero credentials or placeholder strings enter the planning pipeline.
+- **Removed Deprecated URL Validation in `runInit`**:
+  - Cleaned up leftover `validateDatabaseUrl` invocation in `runInit` to prevent false-positive requirement checks when initializing non-SQLite projects.
+- **Database URL Validation Isolation**:
+  - Isolated `validateDatabaseUrl` to standalone validation unit tests and dedicated runtime parsers.
+
 ## v0.20.1 — Platform-First Init Wizard & UX Alignment (2026-08-22)
 
 Targeted bug-fix and UX alignment release aligning the project creation experience (`solarch init`) with the platform-first architecture.
