@@ -23,7 +23,7 @@ export async function promptSelect<T = string>(opts: PromptSelectOptions<T>): Pr
     message: opts.message,
     options: opts.options as any,
     initialValue: opts.initialValue as any,
-    maxItems: opts.maxItems,
+    maxItems: opts.maxItems ?? 15,
   })
 
   if (isCancel(result)) {

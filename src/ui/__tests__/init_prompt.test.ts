@@ -54,25 +54,23 @@ describe('Solarch Init TUI Prompt Flow (Phase 1 & Platform Alignment)', () => {
     expect(config.plan?.sdks.selected).toEqual(['solarch-electron'])
   })
 
-  it('3. Supports database setup and plugin selection when platform options are selected', async () => {
+  it('3. Supports plugin selection when platform options are selected', async () => {
     vi.spyOn(selectModule, 'promptSelect')
       .mockResolvedValueOnce('saas')       // 1. Application Type
       .mockResolvedValueOnce('cloud')      // 3. Deployment Model
       .mockResolvedValueOnce('postgres')   // 4. Database Engine
-      .mockResolvedValueOnce('local')      // 5. Database Setup
-      .mockResolvedValueOnce('selected')   // 10. Plugin mode
+      .mockResolvedValueOnce('selected')   // 8. Plugin mode
 
     vi.spyOn(textModule, 'promptText').mockResolvedValueOnce('saas-enterprise')
     vi.spyOn(multiselectModule, 'promptMultiSelect')
-      .mockResolvedValueOnce(['auth', 'payments'])      // 7. Capabilities
-      .mockResolvedValueOnce(['solarch-web'])           // 8. SDKs
-      .mockResolvedValueOnce(['stripe', 'resend'])      // 10b. Plugins
+      .mockResolvedValueOnce(['auth', 'payments'])      // 6. Capabilities
+      .mockResolvedValueOnce(['solarch-web'])           // 7. SDKs
+      .mockResolvedValueOnce(['stripe', 'resend'])      // 8b. Plugins
 
     const config = await promptInit()
 
     expect(config.name).toBe('saas-enterprise')
     expect(config.database).toBe('postgres')
-    expect(config.dbSetup).toBe('local')
     expect(config.plan?.plugins.mode).toBe('selected')
     expect(config.plan?.plugins.plugins).toEqual(['stripe', 'resend'])
   })

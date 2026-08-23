@@ -74,12 +74,10 @@ export async function promptReview(
     lines.push(`  ${colors.bold(dbDisplay)}`)
     lines.push('')
 
-    if (config.dbSetup) {
+    if (config.dbSetup && config.dbSetup !== 'local') {
       const setupDisplay = config.dbSetup === 'linked'
-        ? 'Platform Managed (Link Solarch project)'
-        : config.dbSetup === 'later'
-        ? 'Connect Later (via Solarch Platform)'
-        : 'Local Development'
+        ? 'Platform Managed'
+        : 'Connect Later'
       lines.push('Database Setup:')
       lines.push(`  ${colors.bold(setupDisplay)}`)
       lines.push('')

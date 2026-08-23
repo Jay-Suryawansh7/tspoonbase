@@ -24,6 +24,7 @@ export async function promptMultiSelect<T = string>(opts: PromptMultiSelectOptio
     options: opts.options as any,
     initialValues: opts.initialValues as any,
     required: opts.required ?? false,
+    maxItems: 15,
   })
 
   if (isCancel(result)) {

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.20.3 — UI Prompt Streamlining & Visible Database Engine Options (2026-08-23)
+
+UI ergonomics and prompt streamlining release ensuring all database engine options (SQLite, PostgreSQL, MongoDB) render clearly without pagination truncation or follow-up credential questions.
+
+### Fixed & Enhanced
+- **Direct Database Selection Flow**:
+  - Eliminated all follow-up database setup sub-questions after engine selection. Choosing SQLite, PostgreSQL, or MongoDB moves directly to capabilities and SDKs.
+  - Zero database URL prompts across the entire CLI initialization lifecycle.
+- **Prevented Prompt Option Clipping**:
+  - Increased default `maxItems` to 15 in `promptSelect` and `promptMultiSelect` wrappers to ensure `@clack/prompts` never paginates or hides choices (e.g. MongoDB) in compact terminals.
+  - Embedded `(Recommended)` indicators directly in option labels, removing vertical note banners that ate terminal row height.
+
 ## v0.20.2 — Complete DATABASE_URL Decoupling & Prompt Invariant Hardening (2026-08-23)
 
 Maintenance and security cleanup release strictly decoupling `DATABASE_URL` from interactive prompts and initialization pre-flight validation.

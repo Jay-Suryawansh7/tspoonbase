@@ -1,21 +1,19 @@
 /**
- * Solarch CLI Init TUI Prompt Flow (Phase 1 & Ecosystem Alignment)
+ * Solarch CLI Init TUI Prompt Flow (Phase 1 & Platform Alignment)
  *
- * Implements the full platform-first decision sequence:
+ * Direct, streamlined platform-first decision sequence:
  * 1. Application Type
  * 2. Project Name
  * 3. Deployment Model
- * 4. Database Engine & Recommendation (with "Why" reasons)
- * 5. Database Setup Intent (Local development, Link Solarch project, Configure later)
- * 6. Desktop Runtime (if desktop)
- * 7. Application Capabilities (Multi-select)
- * 8. SDK Requirement Matrix & Selection
- * 9. SDK Installation Preview
- * 10. Plugin Intent (Dashboard-oriented, zero-credentials)
- * 11. ProjectPlan construction
+ * 4. Database Engine (SQLite, PostgreSQL, MongoDB - zero follow-up questions)
+ * 5. Desktop Runtime (if desktop)
+ * 6. Application Capabilities (Multi-select)
+ * 7. SDK Selection (Pre-selected with recommendations)
+ * 8. Plugin Selection (Optional)
+ * 9. ProjectPlan construction & confirmation
  */
 
-import { intro, cancel, note } from '@clack/prompts'
+import { intro, cancel } from '@clack/prompts'
 import { promptText } from './text.js'
 import { promptSelect } from './select.js'
 import { promptMultiSelect } from './multiselect.js'
@@ -76,7 +74,7 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
         { value: 'saas', label: 'SaaS Application', hint: 'Organizations, OAuth2, audit logs & billing hooks' },
         { value: 'realtime', label: 'Realtime Application', hint: 'WebSocket/SSE subscriptions & event streaming' },
         { value: 'ai', label: 'AI Application', hint: 'Backend for LLMs, embeddings, vector search & AI workloads' },
-        { value: 'agent', label: 'Agent Application', hint: 'Backend/application designed around autonomous or tool-using agents' },
+        { value: 'agent', label: 'Agent Application', hint: 'Backend designed around autonomous or tool-using agents' },
         { value: 'mobile', label: 'Mobile Application', hint: 'Mobile backend for React Native & Expo applications' },
         { value: 'desktop', label: 'Desktop Application', hint: 'Cross-platform desktop application backend' },
         { value: 'custom', label: 'Custom / Minimal', hint: 'Configure custom stack from scratch' },
@@ -131,34 +129,27 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
   })
   const recs = RecommendationEngine.recommend(initialIntent)
 
-  // 4. Database Engine & Recommendation Display
-  const recDbName = recs.database.value === 'postgres'
-    ? `PostgreSQL${recs.databaseCapabilities.vector ? ' (+ pgvector)' : ''}`
-    : recs.database.value === 'mongodb'
-    ? 'MongoDB'
-    : 'SQLite'
-
-  note(
-    `Recommended: ${colors.bold(colors.cyan(recDbName))}\nWhy: ${colors.dim(recs.database.reason)}`,
-    'Database Recommendation'
-  )
+  // 4. Database Engine Selection (Direct choice - no follow-up sub-questions or URL prompts)
+  const isPgRec = recs.database.value === 'postgres'
+  const isMongoRec = recs.database.value === 'mongodb'
+  const isSqliteRec = recs.database.value === 'sqlite'
 
   const databaseEngine = await promptSelect<DatabaseEngine>({
     message: 'Choose database engine',
     options: [
       {
         value: 'sqlite',
-        label: 'SQLite (Embedded)',
-        hint: 'Zero-config local persistence, optimal single-node throughput (WAL mode)',
+        label: `SQLite${isSqliteRec ? ' (Recommended)' : ''}`,
+        hint: 'Zero-config embedded local database (WAL mode)',
       },
       {
         value: 'postgres',
-        label: 'PostgreSQL',
-        hint: 'Enterprise relational database with pgvector & connection pooling',
+        label: `PostgreSQL${isPgRec ? ' (Recommended)' : ''}`,
+        hint: 'Enterprise relational database with pgvector & pooling',
       },
       {
         value: 'mongodb',
-        label: 'MongoDB',
+        label: `MongoDB${isMongoRec ? ' (Recommended)' : ''}`,
         hint: 'Document database for flexible JSON schemas',
       },
     ],
@@ -166,34 +157,10 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
     onCancel: handleCancel,
   })
 
-  // 5. Database Setup Intent
-  let dbSetup: DatabaseSetupMode = 'local'
-  if (databaseEngine !== 'sqlite') {
-    dbSetup = await promptSelect<DatabaseSetupMode>({
-      message: 'How should this database be handled?',
-      options: [
-        {
-          value: 'local',
-          label: 'Local development',
-          hint: 'Scaffold local container configuration (docker-compose.yml)',
-        },
-        {
-          value: 'linked',
-          label: 'Link Solarch project',
-          hint: 'Connect to a managed database via Solarch Platform',
-        },
-        {
-          value: 'later',
-          label: 'Configure later',
-          hint: 'Connect database through Solarch Platform later',
-        },
-      ],
-      initialValue: 'local',
-      onCancel: handleCancel,
-    })
-  }
+  // Default setup mode for non-interactive / scaffolding
+  const dbSetup: DatabaseSetupMode = 'local'
 
-  // 6. Desktop Runtime (if desktop application)
+  // 5. Desktop Runtime (if desktop application)
   let desktopRuntime: DesktopRuntime = 'unspecified'
   if (appType === 'desktop') {
     desktopRuntime = await promptSelect<DesktopRuntime>({
@@ -207,7 +174,7 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
     })
   }
 
-  // 7. Application Capabilities (Multi-select)
+  // 6. Application Capabilities (Multi-select)
   const defaultCaps: string[] = ['auth']
   if (appType === 'ai' || appType === 'agent') {
     defaultCaps.push('ai', 'vector')
@@ -234,7 +201,7 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
     onCancel: handleCancel,
   })
 
-  // 8. Capability Resolution -> SDK Recommendation Matrix
+  // 7. Capability Resolution -> SDK Recommendation Matrix
   const hasAiCapability = selectedCapabilities.includes('ai') || selectedCapabilities.includes('vector') || appType === 'ai' || appType === 'agent'
   const hasAuthCapability = selectedCapabilities.includes('auth')
   const hasRealtimeCapability = selectedCapabilities.includes('realtime')
@@ -280,16 +247,14 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
 
   // Pre-select recommended SDKs
   const recommendedSdkNames = resolvedSdkRecs.map(s => s.packageName)
-  const sdkOptions = Object.values(ECOSYSTEM_SDKS).map(sdk => ({
-    value: sdk.packageName,
-    label: `${sdk.displayName} (${sdk.packageName})`,
-    hint: sdk.description,
-  }))
-
-  if (resolvedSdkRecs.length > 0) {
-    const sdkRecNotes = resolvedSdkRecs.map(r => `• ${colors.cyan(r.packageName)}: ${r.reason}`).join('\n')
-    note(sdkRecNotes, 'SDK Recommendation')
-  }
+  const sdkOptions = Object.values(ECOSYSTEM_SDKS).map(sdk => {
+    const isRecommended = recommendedSdkNames.includes(sdk.packageName)
+    return {
+      value: sdk.packageName,
+      label: `${sdk.displayName} (${sdk.packageName})${isRecommended ? ' (Recommended)' : ''}`,
+      hint: sdk.description,
+    }
+  })
 
   const selectedSdks = await promptMultiSelect<string>({
     message: 'Select client SDKs to install (Optional)',
@@ -299,15 +264,7 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
     onCancel: handleCancel,
   })
 
-  // 9. SDK Installation Preview Note
-  if (selectedSdks.length > 0) {
-    note(
-      `Selected SDKs:\n${selectedSdks.map(s => `  ${colors.green('✔')} ${s}`).join('\n')}\n\nInstall command:\n  ${colors.dim(`npm install ${selectedSdks.join(' ')}`)}`,
-      'SDK Integration Preview'
-    )
-  }
-
-  // 10. Plugin Intent (Credential-free, Dashboard-oriented)
+  // 8. Plugin Intent (Credential-free, Dashboard-oriented)
   const defaultPluginMode: 'none' | 'later' | 'selected' = hasPaymentsCapability ? 'selected' : 'none'
   const pluginModeChoice = await promptSelect<'none' | 'later' | 'selected'>({
     message: 'Would you like to use Solarch plugins?',
@@ -339,7 +296,7 @@ export async function promptInit(options: PromptInitOptions = {}): Promise<InitC
     })
   }
 
-  // 11. Compose Final ProjectPlan
+  // 9. Compose Final ProjectPlan
   const finalIntent = new ProjectIntent({
     application: appType,
     deployment,
