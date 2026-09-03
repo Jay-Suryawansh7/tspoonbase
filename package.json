@@ -65,7 +65,7 @@
     "cors": "^2.8.5",
     "croner": "^8.0.0",
     "dotenv": "^17.4.2",
-    "express": "^4.18.2",
+    "express": "^5.2.1",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
