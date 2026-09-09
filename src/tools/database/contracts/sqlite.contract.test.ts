@@ -19,7 +19,9 @@ beforeEach(() => {
 
 afterEach(async () => {
   await driver.close()
-  fs.rmSync(tmpDir, { recursive: true, force: true })
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true })
+  } catch {}
 })
 
 runDatabaseContractSuite('sqlite', () => new SqliteDriver(tmpDir), SQLITE_CAPABILITIES)
@@ -50,9 +52,10 @@ describe('sqlite-specific extensions', () => {
 })
 
 describe('factory contract', () => {
-  it('creates a sqlite driver and rejects invalid configurations', () => {
+  it('creates a sqlite driver and rejects invalid configurations', async () => {
     const d = createDatabaseDriver({ provider: 'sqlite', dataDir: tmpDir }) as DatabaseDriver
     expect(d.provider).toBe('sqlite')
+    await d.close()
     expect(() => createDatabaseDriver({ provider: 'postgres', dataDir: tmpDir } as any)).toThrow(DatabaseError)
     expect(() => createDatabaseDriver({ provider: 'postgres', connectionString: '' })).toThrow(/connectionString/)
     expect(() => createDatabaseDriver({ provider: 'cassandra' as any, dataDir: tmpDir })).toThrow(
