@@ -1,7 +1,19 @@
 {
   "name": "solarch",
   "version": "0.20.3",
-  "description": "Solarch - The developer operating system for building, running, and managing modern backend applications.",
+  "description": "Solarch is an open-source, TypeScript-native Backend-as-a-Service (BaaS) that packages SQLite, Express, WebSocket, authentication, file storage, and an admin UI into a single npm package.",
+  "keywords": [
+    "solarch",
+    "baas",
+    "backend-as-a-service",
+    "typescript",
+    "backend",
+    "sqlite",
+    "nodejs",
+    "websocket",
+    "authentication",
+    "self-hosted"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xvertere-org/Solarch.git"
