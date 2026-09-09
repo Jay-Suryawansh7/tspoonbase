@@ -4,18 +4,15 @@
   <img src="./pb_public/solarch-banner.png" alt="Solarch Banner" width="800" />
 </p>
 
-<h3 align="center">
-The developer operating system for building production-ready backend applications.
-</h3>
-
 <p align="center">
-Create. Develop. Inspect. Deploy. Scale.
+  <b>Open-source, TypeScript-native Backend-as-a-Service (BaaS).</b><br>
+  <a href="https://solarch.in">Website</a> • <a href="https://solarch.in/docs/overview/introduction">Documentation</a> • <a href="https://www.npmjs.com/package/solarch">npm</a> • <a href="https://github.com/xvertere-org">GitHub</a> • <a href="https://github.com/xvertere-org/Solarch/issues">Issues</a>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/solarch"><img src="https://img.shields.io/npm/v/solarch.svg?style=flat-square&color=blue" alt="npm version"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg?style=flat-square" alt="Node.js">
-  <img src="https://img.shields.io/npm/dm/solarch.svg?style=flat-square&color=orange" alt="Downloads">
+  <a href="https://www.npmjs.com/package/solarch"><img src="https://img.shields.io/npm/dm/solarch.svg?style=flat-square&color=orange" alt="Downloads"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
 </p>
 
@@ -23,7 +20,9 @@ Create. Develop. Inspect. Deploy. Scale.
 
 ## Overview
 
-Solarch is a complete backend development platform designed to help developers build, run, and manage modern applications with a unified developer experience.
+Solarch is an open-source, TypeScript-native Backend-as-a-Service (BaaS) that packages SQLite, Express, WebSocket, authentication, file storage, realtime communication, and an admin UI into a single Node.js package.
+
+Solarch is designed for TypeScript and JavaScript developers who want a self-hosted, lightweight backend without the operational complexity of multi-container microservices or non-JS runtimes. It packages core backend capabilities into a single npm package and CLI.
 
 From the first project command to production operations, Solarch provides:
 
@@ -571,7 +570,7 @@ solarch
 
 # Architecture
 
-Solarch is designed as a unified developer operating system connecting client SDKs, platform services, and external AI agents.
+Solarch is designed as a unified Backend-as-a-Service connecting client SDKs, platform services, and external AI agents.
 
 ```text
                                  SOLARCH ECOSYSTEM ARCHITECTURE
@@ -655,7 +654,5 @@ solarch mcp tools
 
 ## Solarch Philosophy
 
-**Solarch is not a library you install.**
-
-**Solarch is the developer operating system where you build, run, scale, and govern modern backend architectures.**
+Solarch is designed for TypeScript and JavaScript developers who want a self-hosted, lightweight backend without the operational complexity of multi-container microservices or non-JS runtimes. It is distributed as a single npm package and CLI for TypeScript and JavaScript applications.
 
